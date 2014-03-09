@@ -1,2 +1,2 @@
-Innomedia Layout Editor
+Innomedia CMS
 
