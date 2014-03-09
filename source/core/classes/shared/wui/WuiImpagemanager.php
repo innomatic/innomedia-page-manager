@@ -24,7 +24,33 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $processor = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
+        $context = \Innomedia\Context::instance(
+            '\Innomedia\Context',
+            \Innomatic\Core\RootContainer::instance('\Innomatic\Core\RootContainer')
+                ->getHome().
+            '/'.
+            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDomainId(),
+            $processor->getRequest(),
+            $processor->getResponse()
+        );
+        /*
+        $modules = $context->getModulesList();
+        $pages_list = array();
+
+        foreach ($modules as $module) {
+            $module_obj = new \Innomedia\Module($context, $module);
+            if (!$module_obj->hasPages()) {
+                continue;
+            }
+            $pages_list[$module] = $module_obj->getPagesList();
+
+            foreach ($pages_list[$module] as $page) {
+                $pagesComboList[$module.'/'.$page] = ucfirst($module).': '.ucfirst($page);
+            }
+        }
+ */
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
             $page
@@ -115,10 +141,20 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         $html .= '<div class="gridblock">
                             <p>'.$block['module'].'/'.$block['name'].'</p>';
 
-                                        $xml = '<horizgroup><children>';
-
-                        $xml .= '</children></horizgroup>';
-                        $html .= WuiXml::getContentFromXml('', $xml);
+                        $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
+                        $html .= $fqcn;
+                        $included = @include_once $fqcn;
+                        if ($included) {
+                            // Find block class
+                            $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
+                            if (class_exists($class)) {
+                                if ($class::hasBlockManager()) {
+                                    $managerClass = $class::getBlockManager();
+                                    $manager = new $managerClass();
+                                    $html .= WuiXml::getContentFromXml('', $manager->getManagerXml());
+                               }
+                            }
+                        }
 
                         $html .= '
                             </div>';
@@ -182,7 +218,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
             $page
@@ -201,7 +237,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
             $page
@@ -221,7 +257,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
             $page
