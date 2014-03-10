@@ -60,86 +60,21 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             $modified = true;
         }
 
+        $xml = '<vertgroup><children>
+            <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
         $blocks = $editorPage->getBlocks();
         $columns = $editorPage->getColumns();
         $rows = $editorPage->getRows();
 
-        $html = '
-            <style type="text/css">
-            <!--
-            .gridtable {
-	margin: 2px;
-	padding: 0px;
-	border: solid 1px #e6e6e6;
-}
-
-.gridtable td {
-	padding: 3px;
-	vertical-align: middle;
-	text-align: center;
-	border: solid 1px #e6e6e6;
-    }
-
-.gridtable td td {
-    border: 0;
-    }
-    .newgridblock {
-	padding: 3px;
-}
-
-.gridblock {
-	border-bottom: dotted 1px #e6e6e6;
-	padding: 3px;
-}
-
-.gridblock p {
-	margin: 0px;
-	padding: 2px;
-	padding-bottom: 5px;
-	color: #c0c0c0;
-    }
-
-    .gridtable ul
-{
-	padding: 0px;
-	display: block;
-	margin: 0px;
-	white-space: nowrap;
-}
-
-.gridtable li
-{
-	display: inline;
-}
-
-.gridtable img
-{
-	vertical-align: middle;
-}
-
-.gridtable li a
-{
-	font-size: 10px;
-	font-weight: bold;
-	text-decoration: none;
-	vertical-align: middle;
-}
-
-    -->
-</style>
-
-<table class="gridtable">';
-
         for ($row = 1; $row <= $rows; $row++) {
-            $html .= '<tr>';
             for ($column = 1; $column <= $columns; $column++) {
-                $html .= '<td>';
                 if (isset($blocks[$row][$column])) {
                     $positions = count($blocks[$row][$column]);
                     foreach ($blocks[$row][$column] as $position => $block) {
-                        $html .= '<div class="gridblock">
-                            <p>'.$block['module'].'/'.$block['name'].'</p>';
+                        $hasBlockManager = false;
+                        $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+                        $xml .= '<vertgroup row="'.$row.'" col="'.$column.'"><children>';
 
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
                         $included = @include_once $fqcn;
@@ -148,29 +83,29 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                             $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
                             if (class_exists($class)) {
                                 if ($class::hasBlockManager()) {
-                                    $headers['0']['label'] = ucfirst($block['module'].': '.$block['name']);
+                                    $hasBlockManager = true;
+                                    $headers['0']['label'] = $blockName;
                                     $managerClass = $class::getBlockManager();
                                     $manager = new $managerClass();
-                                    $html .= WuiXml::getContentFromXml('', '<table><args><headers type="array">'.
+                                    $xml .= '<table><args><headers type="array">'.
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><children>'.
-                                        $manager->getManagerXml().'</children></vertgroup></children></table>');
+                                        $manager->getManagerXml().'</children></vertgroup></children></table>';
                                }
                             }
                         }
 
-                        $html .= '
-                            </div>';
+                        if (!$hasBlockManager) {
+                            $xml .= '<label><args><label>'.WuiXml::cdata($blockName).'</label></args></label>';
+                        }
+                        $xml .= '</children></vertgroup>';
                     }
                 } else {
                 }
-                $html .= '</td>';
             }
-            $html .= '            </tr>';
         }
-        $html .= '<table>';
 
-        $xml = '<vertgroup><children>
+        $xml .= '</children></grid>
             <horizbar/>
 
             <horizgroup><args><width>0%</width></args><children>
@@ -205,13 +140,10 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 ';
         }
 
-        $xml .= '
-            </children></horizgroup>
+        $xml .= '</children></horizgroup>
             </children></vertgroup>';
 
-        $html .= WuiXml::getContentFromXml('', $xml);
-
-        return $html;
+        return WuiXml::getContentFromXml('', $xml);
     }
 
     public static function ajaxLoadPage($module, $page)
