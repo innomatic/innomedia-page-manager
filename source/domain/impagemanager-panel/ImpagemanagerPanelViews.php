@@ -106,7 +106,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               var page = document.getElementById(\'page\');
               var pagevalue = page.options[page.selectedIndex].value;
               var elements = pagevalue.split(\'/\');
-              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1])</change>
+              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1], 0)</change>
               </events>
             </combobox>
             <formarg><args><id>pageid</id><value>0</value></args></formarg>
