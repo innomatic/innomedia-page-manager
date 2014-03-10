@@ -5,7 +5,8 @@ namespace Innomedia\Cms;
 class Page
 {
     protected $module;
-    protected $page;
+    protected $pageName;
+    protected $pageId;
     protected $blocks = array();
     protected $theme;
     protected $rows;
@@ -19,13 +20,14 @@ class Page
      */
     protected $properties = array();
 
-    public function __construct(\Innomatic\Webapp\WebAppSession $session, $module, $page)
+    public function __construct(\Innomatic\Webapp\WebAppSession $session, $module, $pageName, $pageId = 0)
     {
-        $this->module = strlen($module) ? $module : 'home';
-        $this->page = strlen($page) ? $page : 'index';
-        $this->session = $session;
-        $processor = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
-        $this->context = \Innomedia\Context::instance(
+        $this->module   = strlen($module) ? $module : 'home';
+        $this->pageName = strlen($pageName) ? $pageName : 'index';
+        $this->pageId   = $pageId;
+        $this->session  = $session;
+        $processor      = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
+        $this->context  = \Innomedia\Context::instance(
             '\Innomedia\Context',
             \Innomatic\Core\RootContainer::instance('\Innomatic\Core\RootContainer')
                 ->getHome().
@@ -37,7 +39,7 @@ class Page
 
         if ($this->session->isValid('innomedia_page_manager_page')) {
             $pageInSession = $this->session->get('innomedia_page_manager_page');
-            if ($pageInSession != $this->module.'/'.$this->page) {
+            if ($pageInSession != $this->module.'/'.$this->pageName) {
                 $this->resetChanges();
             }
         }
@@ -58,11 +60,15 @@ class Page
         return $this->module;
     }
 
-    public function getPage()
+    public function getPageName()
     {
-        return $this->page;
+        return $this->pageName;
     }
 
+    public function getPageId()
+    {
+        return $this->pageId;
+    }
     public function getBlocks()
     {
         return $this->blocks;
@@ -80,9 +86,10 @@ class Page
 
     public function parsePage()
     {
-        $page = $this->context->getPagesHome($this->module).$this->page.'.local.yml';
+        // TODO handle page instance level blocks
+        $page = $this->context->getPagesHome($this->module).$this->pageName.'.local.yml';
         if (!file_exists($page)) {
-            $page = $this->context->getPagesHome($this->module).$this->page.'.yml';
+            $page = $this->context->getPagesHome($this->module).$this->pageName.'.yml';
         }
 
         if (!file_exists($page)) {
@@ -124,7 +131,7 @@ class Page
             $this->session->put('innomedia_page_manager_theme',      $theme);
             $this->session->put('innomedia_page_manager_rows',       $rows);
             $this->session->put('innomedia_page_manager_columns',    $columns);
-            $this->session->put('innomedia_page_manager_page',       $this->module.'/'.$this->page);
+            $this->session->put('innomedia_page_manager_page',       $this->module.'/'.$this->pageName);
         } else {
             // Retrieves page definition from the session
             $result     = $this->session->get('innomedia_page_manager_blocks');
@@ -141,8 +148,35 @@ class Page
         $this->theme      = $theme;
     }
 
-    public function savePage() {
-        $file = $this->context->getPagesHome($this->module).$this->page.'.local.yml';
+    public function savePage($parameters) {
+        foreach ($this->blocks as $row => $column) {
+            foreach ($column as $position => $blocks) {
+                foreach ($blocks as $block) {
+                        $hasBlockManager = false;
+                        $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+
+                        $fqcn = \Innomedia\Block::getClass($this->context, $block['module'], $block['name']);
+                        $included = @include_once $fqcn;
+                        if ($included) {
+                            // Find block class
+                            $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
+                            if (class_exists($class)) {
+                                if ($class::hasBlockManager()) {
+                                    $hasBlockManager = true;
+                                    $headers['0']['label'] = $blockName;
+                                    $managerClass = $class::getBlockManager();
+                                    $manager = new $managerClass($this->module.'/'.$this->pageName);
+                                    $manager->saveBlock($parameters[$block['module']][$block['name']]);
+                               }
+                            }
+                        }
+                }
+            }
+        }
+        return true;
+        // TODO handle page instance level blocks
+
+        $file = $this->context->getPagesHome($this->module).$this->pageName.'.local.yml';
         $yaml = array();
 
         if (strlen($this->theme)) {

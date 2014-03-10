@@ -13,11 +13,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
     public function generateSource()
     {
-        $this->mLayout = '<div id="wui_impagemanager">'.$this->getHTML($this->mArgs['module'], $this->mArgs['page']).'</div>';
+        $this->mLayout = '<div id="wui_impagemanager">'.$this->getHTML($this->mArgs['module'], $this->mArgs['page'], $this->mArgs['pageid']).'</div>';
         return true;
     }
 
-    protected function getHTML($module, $page, $modified = false)
+    protected function getHTML($module, $page, $pageId = 0, $modified = false)
     {
         $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
             'innomedia-layout-editor::editor',
@@ -53,10 +53,14 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $page,
+            $pageId
         );
 
         $xml = '<vertgroup><children>
+            <form><name>impagemanager</name>
+              <args><id>impagemanager</id></args>
+              <children>
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
         $blocks = $editorPage->getBlocks();
@@ -102,6 +106,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         }
 
         $xml .= '</children></grid>
+            </children></form>
             <horizbar/>
 
             <horizgroup><args><width>0%</width></args><children>
@@ -116,7 +121,15 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-    			    <click>xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\')</click>
+                  <click>'.WuiXml::cdata('
+                  var kvpairs = [];
+var form = document.getElementById(\'impagemanager\');
+for ( var i = 0; i < form.elements.length; i++ ) {
+   var e = form.elements[i];
+   kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+}
+var params = kvpairs.join(\'&\');
+                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', params)').'</click>
     			  </events>
   </button>
   <button>
@@ -128,10 +141,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-    			    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\')</click>
+    			    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
     			  </events>
   </button>
-
 ';
 
         $xml .= '</children></horizgroup>
@@ -140,61 +152,83 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         return WuiXml::getContentFromXml('', $xml);
     }
 
-    public static function ajaxLoadPage($module, $page)
+    public static function ajaxLoadPage($module, $pageName, $pageId)
     {
         $objResponse = new XajaxResponse();
-        if (!(strlen($module) && strlen($page))) {
+        if (!(strlen($module) && strlen($pageName))) {
             return $objResponse;
         }
 
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $pageName,
+            $pageId
         );
         $editorPage->parsePage();
 
-        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, false));
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
 
         return $objResponse;
     }
 
-    public static function ajaxSavePage($module, $page)
+    public static function ajaxSavePage($module, $pageName, $pageId, $parameters)
     {
         $objResponse = new XajaxResponse();
-        if (!(strlen($module) && strlen($page))) {
+        if (!(strlen($module) && strlen($pageName))) {
             return $objResponse;
         }
 
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $pageName,
+            $pageId
         );
         $editorPage->parsePage();
-        $editorPage->savePage();
+        $decodedParams = array();
+        foreach (explode('&', $parameters) as $chunk) {
+            $param = explode("=", $chunk);
 
-        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, false));
+            if ($param) {
+                $moduleName = $blockName = '';
+
+                $keys = explode('_', urldecode($param[0]));
+                if (count($keys) < 3) {
+                    // Key is not valid
+                    continue;
+                }
+
+                $moduleName = array_shift($keys);
+                $blockName = array_shift($keys);
+                $paramName = implode('_', $keys);
+                $decodedParams[$moduleName][$blockName][$paramName] = urldecode($param[1]);
+            }
+        }
+        $editorPage->savePage($decodedParams);
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
 
         return $objResponse;
     }
 
-    public static function ajaxRevertPage($module, $page)
+    public static function ajaxRevertPage($module, $pageName, $pageId)
     {
         $objResponse = new XajaxResponse();
-        if (!(strlen($module) && strlen($page))) {
+        if (!(strlen($module) && strlen($pageName))) {
             return $objResponse;
         }
 
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $pageName,
+            $pageId
         );
         $editorPage->parsePage();
         $editorPage->resetChanges();
 
-        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, false));
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
 
         return $objResponse;
     }
