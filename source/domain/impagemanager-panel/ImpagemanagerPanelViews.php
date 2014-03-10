@@ -27,41 +27,41 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $this->icon = 'elements';
 
         $this->toolbars['view'] = array(
-        	'default' => array(
-        		'label' => $this->localeCatalog->getStr('layout_editor_toolbar'),
-        		'themeimage' => 'elements',
-        		'action' => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-        		'horiz' => 'true'
+        	'default'           = > array(
+        		'label'         = > $this->localeCatalog->getStr('layout_editor_toolbar'),
+        		'themeimage'    = > 'elements',
+        		'action'        = > \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+        		'horiz'         = > 'true'
         	)
         );
        }
 
     public function endHelper()
     {
-    	if (!strlen($this->pageTitle)) {
-    		$this->pageTitle = $this->localeCatalog->getStr('editor_title');
-    	}
+        if (!strlen($this->pageTitle)) {
+            $this->pageTitle = $this->localeCatalog->getStr('editor_title');
+        }
 
-    	$this->wuiContainer->addChild(
-			new WuiInnomaticPage(
-				'page',
-				array(
-					'pagetitle' => $this->pageTitle,
-					'icon' => $this->icon,
-					'maincontent' => new WuiXml('content', array('definition' => $this->pageXml)),
-					'status' => $this->status,
-					'toolbars' => array(
-						new WuiInnomaticToolbar(
-							'view',
-							array(
-								'toolbars' => $this->toolbars,
-								'toolbar' => 'true'
-							)
-						)
-					)
-				)
-			)
-    	);
+        $this->wuiContainer->addChild(
+            new WuiInnomaticPage(
+                'page',
+                array(
+                    'pagetitle'   = > $this->pageTitle,
+                    'icon'        = > $this->icon,
+                    'maincontent' = > new WuiXml('content', array('definition' = > $this->pageXml)),
+                    'status'      = > $this->status,
+                    'toolbars'    = > array(
+                        new WuiInnomaticToolbar(
+                            'view',
+                            array(
+                                'toolbars' => $this->toolbars,
+                                'toolbar' => 'true'
+                            )
+                        )
+                    )
+                )
+            )
+        );
     }
 
     public function viewDefault($eventData)
