@@ -56,10 +56,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             $page
         );
 
-        if ($editorPage->isChanged()) {
-            $modified = true;
-        }
-
         $xml = '<vertgroup><children>
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
@@ -86,8 +82,8 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                     $hasBlockManager = true;
                                     $headers['0']['label'] = $blockName;
                                     $managerClass = $class::getBlockManager();
-                                    $manager = new $managerClass();
-                                    $xml .= '<table><args><headers type="array">'.
+                                    $manager = new $managerClass($module.'/'.$page);
+                                    $xml .= '<table><args><width>400</width><headers type="array">'.
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><children>'.
                                         $manager->getManagerXml().'</children></vertgroup></children></table>';
@@ -111,7 +107,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             <horizgroup><args><width>0%</width></args><children>
             ';
 
-        if ($modified == true) {
             $xml .= '  <button>
     <args>
       <horiz>true</horiz>
@@ -138,7 +133,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
   </button>
 
 ';
-        }
 
         $xml .= '</children></horizgroup>
             </children></vertgroup>';
