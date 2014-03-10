@@ -142,16 +142,19 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                             <p>'.$block['module'].'/'.$block['name'].'</p>';
 
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
-                        $html .= $fqcn;
                         $included = @include_once $fqcn;
                         if ($included) {
                             // Find block class
                             $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
                             if (class_exists($class)) {
                                 if ($class::hasBlockManager()) {
+                                    $headers['0']['label'] = ucfirst($block['module'].': '.$block['name']);
                                     $managerClass = $class::getBlockManager();
                                     $manager = new $managerClass();
-                                    $html .= WuiXml::getContentFromXml('', $manager->getManagerXml());
+                                    $html .= WuiXml::getContentFromXml('', '<table><args><headers type="array">'.
+                                        WuiXml::encode($headers)
+                                        .'</headers></args><children><vertgroup row="0" col="0"><children>'.
+                                        $manager->getManagerXml().'</children></vertgroup></children></table>');
                                }
                             }
                         }
