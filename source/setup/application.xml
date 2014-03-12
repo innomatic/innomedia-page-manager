@@ -42,5 +42,9 @@
 
         <wuiwidget name="impagemanager" file="WuiImpagemanager.php" />
 
+        <permission name="add_web_content" title="add_web_content" description="" catalog="innomedia-page-manager::roles" defaultroles="web_system_administrator,web_editor" />
+
+        <permission name="add_web_page" title="add_web_page" description="" catalog="innomedia-page-manager::roles" defaultroles="web_system_administrator" />
+
 	</components>
 </application>
