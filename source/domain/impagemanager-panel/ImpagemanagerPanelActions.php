@@ -26,4 +26,15 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     public function endHelper()
     {
     }
+
+    public static function ajaxAddContent($module, $page)
+    {
+        $page = new \Innomedia\Page($module, $page);
+        $page->addContent();
+        $objResponse = new XajaxResponse();
+        //$objResponse->addAssign("wui_impageeditor", "innerHTML", self::getHTML($module, $page, true));
+
+        return $objResponse;
+
+    }
 }

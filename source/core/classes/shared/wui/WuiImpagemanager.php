@@ -24,16 +24,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
 
-        $processor = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
-        $context = \Innomedia\Context::instance(
-            '\Innomedia\Context',
-            \Innomatic\Core\RootContainer::instance('\Innomatic\Core\RootContainer')
-                ->getHome().
-            '/'.
-            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDomainId(),
-            $processor->getRequest(),
-            $processor->getResponse()
-        );
+        $context = \Innomedia\Context::instance('\Innomedia\Context');
         /*
         $modules = $context->getModulesList();
         $pages_list = array();

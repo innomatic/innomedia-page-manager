@@ -26,12 +26,27 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         $this->icon = 'elements';
 
+        $this->toolbars['content'] = array(
+        	'content'           => array(
+        		'label'         => $this->localeCatalog->getStr('content_toolbar'),
+        		'themeimage'    => 'documenttext',
+        		'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+        		'horiz'         => 'true'
+            ),
+            'addcontent'           => array(
+        		'label'         => $this->localeCatalog->getStr('newcontent_toolbar'),
+        		'themeimage'    => 'mathadd',
+        		'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'addcontent', ''))),
+        		'horiz'         => 'true'
+        	)
+
+        );
         $this->toolbars['view'] = array(
-        	'default'           = > array(
-        		'label'         = > $this->localeCatalog->getStr('layout_editor_toolbar'),
-        		'themeimage'    = > 'elements',
-        		'action'        = > \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-        		'horiz'         = > 'true'
+        	'default'           => array(
+        		'label'         => $this->localeCatalog->getStr('pages_toolbar'),
+        		'themeimage'    => 'documenttext',
+        		'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'pages', ''))),
+        		'horiz'         => 'true'
         	)
         );
        }
@@ -46,11 +61,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             new WuiInnomaticPage(
                 'page',
                 array(
-                    'pagetitle'   = > $this->pageTitle,
-                    'icon'        = > $this->icon,
-                    'maincontent' = > new WuiXml('content', array('definition' = > $this->pageXml)),
-                    'status'      = > $this->status,
-                    'toolbars'    = > array(
+                    'pagetitle'   => $this->pageTitle,
+                    'icon'        => $this->icon,
+                    'maincontent' => new WuiXml('content', array('definition' => $this->pageXml)),
+                    'status'      => $this->status,
+                    'toolbars'    => array(
                         new WuiInnomaticToolbar(
                             'view',
                             array(
@@ -66,31 +81,14 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewDefault($eventData)
     {
-        $processor = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
-        $context = \Innomedia\Context::instance(
-            '\Innomedia\Context',
-            \Innomatic\Core\RootContainer::instance('\Innomatic\Core\RootContainer')
-                ->getHome().
-            '/'.
-            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDomainId(),
-            $processor->getRequest(),
-            $processor->getResponse()
-        );
-        $modules = $context->getModulesList();
-        $pages_list = array();
+        $context = \Innomedia\Context::instance('\Innomedia\Context');
+        $pagesList = \Innomedia\Page::getInstancePagesList();
 
         $pagesComboList = array();
 
-        foreach ($modules as $module) {
-            $module_obj = new \Innomedia\Module($context, $module);
-            if (!$module_obj->hasPages()) {
-                continue;
-            }
-            $pages_list[$module] = $module_obj->getPagesList();
-
-            foreach ($pages_list[$module] as $page) {
-                $pagesComboList[$module.'/'.$page] = ucfirst($module).': '.ucfirst($page);
-            }
+        foreach ($pagesList as $pageItem) {
+            list($module, $page) = explode('/', $pageItem);
+            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
         }
         ksort($pagesComboList);
         $firstPage = key($pagesComboList);
@@ -119,4 +117,92 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </children>
             </vertgroup>';
     }
+
+    public function viewAddcontent($eventData)
+    {
+        $context = \Innomedia\Context::instance('\Innomedia\Context');
+        $pagesList = \Innomedia\Page::getInstancePagesList();
+
+        $pagesComboList = array();
+
+        foreach ($pagesList as $pageItem) {
+            list($module, $page) = explode('/', $pageItem);
+            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
+        }
+        ksort($pagesComboList);
+        $firstPage = key($pagesComboList);
+        list($module, $page) = explode('/', $firstPage);
+
+        $this->pageXml = '<vertgroup><children>
+            <horizgroup><args><width>0%</width></args><children>
+            <combobox><args><id>pagetype</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
+            </combobox>
+
+             <button>
+                <args>
+                  <horiz>true</horiz>
+                  <frame>false</frame>
+                  <themeimage>mathadd</themeimage>
+                  <label>'.$this->localeCatalog->getStr('addcontent_button').'</label>
+                  <action>javascript:void(0)</action>
+                </args>
+                  <events>
+                  <click>
+                  var page = document.getElementById(\'pagetype\');
+                  var pagevalue = page.options[page.selectedIndex].value;
+                  var elements = pagevalue.split(\'/\');
+                  xajax_AddContent(elements[0], elements[1])</click>
+                  </events>
+              </button>
+
+           </children></horizgroup>
+            <horizbar/>
+            <divframe><name>pageeditor</name>
+              <args><id>pageeditor</id></args>
+              <children><void/>
+              </children>
+            </divframe>
+            </children></vertgroup>';
+    }
+
+    public function viewPages($eventData)
+    {
+        $context = \Innomedia\Context::instance('\Innomedia\Context');
+        $pagesList = \Innomedia\Page::getNoInstancePagesList();
+
+        $pagesComboList = array();
+
+        foreach ($pagesList as $pageItem) {
+            list($module, $page) = explode('/', $pageItem);
+            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
+        }
+        ksort($pagesComboList);
+        $firstPage = key($pagesComboList);
+        list($module, $page) = explode('/', $firstPage);
+
+        $this->pageXml = '<vertgroup>
+            <children>
+            <horizgroup><args><width>0%</width></args>
+            <children>
+            <combobox><args><id>page</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
+              <events>
+              <change>
+              var page = document.getElementById(\'page\');
+              var pagevalue = page.options[page.selectedIndex].value;
+              var elements = pagevalue.split(\'/\');
+              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1], 0)</change>
+              </events>
+            </combobox>
+            <formarg><args><id>pageid</id><value>0</value></args></formarg>
+            </children>
+            </horizgroup>
+            <horizbar />
+            <impagemanager>
+              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page></args>
+            </impagemanager>
+            </children>
+            </vertgroup>';
+    }
+
+
 }

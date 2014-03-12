@@ -26,16 +26,7 @@ class Page
         $this->pageName = strlen($pageName) ? $pageName : 'index';
         $this->pageId   = $pageId;
         $this->session  = $session;
-        $processor      = \Innomatic\Webapp\WebAppContainer::instance('\Innomatic\Webapp\WebAppContainer')->getProcessor();
-        $this->context  = \Innomedia\Context::instance(
-            '\Innomedia\Context',
-            \Innomatic\Core\RootContainer::instance('\Innomatic\Core\RootContainer')
-                ->getHome().
-            '/'.
-            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentDomain()->getDomainId(),
-            $processor->getRequest(),
-            $processor->getResponse()
-        );
+        $this->context  = \Innomedia\Context::instance('\Innomedia\Context');
 
         if ($this->session->isValid('innomedia_page_manager_page')) {
             $pageInSession = $this->session->get('innomedia_page_manager_page');
