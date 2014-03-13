@@ -77,7 +77,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                     $hasBlockManager = true;
                                     $headers['0']['label'] = $blockName;
                                     $managerClass = $class::getBlockManager();
-                                    $manager = new $managerClass($module.'/'.$page);
+                                    $manager = new $managerClass($module.'/'.$page, $pageId);
                                     $xml .= '<table><args><width>400</width><headers type="array">'.
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><children>'.

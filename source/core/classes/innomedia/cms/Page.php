@@ -156,7 +156,7 @@ class Page
                                     $hasBlockManager = true;
                                     $headers['0']['label'] = $blockName;
                                     $managerClass = $class::getBlockManager();
-                                    $manager = new $managerClass($this->module.'/'.$this->pageName);
+                                    $manager = new $managerClass($this->module.'/'.$this->pageName, $this->pageId);
                                     $manager->saveBlock($parameters[$block['module']][$block['name']]);
                                }
                             }

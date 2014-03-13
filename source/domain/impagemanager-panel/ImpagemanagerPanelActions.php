@@ -29,10 +29,21 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
 
     public static function ajaxAddContent($module, $page)
     {
-        $page = new \Innomedia\Page($module, $page);
-        $page->addContent();
+        $contentPage = new \Innomedia\Page($module, $page);
+        $contentPage->addContent();
+        $xml = '<vertgroup><children>
+            <horizbar />
+            <impagemanager>
+            <args>
+              <module>'.WuiXml::cdata($module).'</module>
+              <page>'.WuiXml::cdata($page).'</page>
+              <pageid>'.$contentPage->getId().'</pageid>
+            </args>
+            </impagemanager>
+            </children></vertgroup>';
+
         $objResponse = new XajaxResponse();
-        //$objResponse->addAssign("wui_impageeditor", "innerHTML", self::getHTML($module, $page, true));
+        $objResponse->addAssign("pageeditor", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('pageeditor', $xml));
 
         return $objResponse;
 
