@@ -26,21 +26,23 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         $this->icon = 'elements';
 
-        $this->toolbars['content'] = array(
-        	'content'           => array(
-        		'label'         => $this->localeCatalog->getStr('content_toolbar'),
-        		'themeimage'    => 'documenttext',
-        		'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-        		'horiz'         => 'true'
-            ),
-            'addcontent'           => array(
-        		'label'         => $this->localeCatalog->getStr('newcontent_toolbar'),
-        		'themeimage'    => 'mathadd',
-        		'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'addcontent', ''))),
-        		'horiz'         => 'true'
-        	)
+        if (count(\Innomedia\Page::getInstancePagesList()) > 0) {
+            $this->toolbars['content'] = array(
+                'content'           => array(
+                    'label'         => $this->localeCatalog->getStr('content_toolbar'),
+                    'themeimage'    => 'documenttext',
+                    'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+                    'horiz'         => 'true'
+                ),
+                'addcontent'           => array(
+                    'label'         => $this->localeCatalog->getStr('newcontent_toolbar'),
+                    'themeimage'    => 'mathadd',
+                    'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'addcontent', ''))),
+                    'horiz'         => 'true'
+                )
+            );
+        }
 
-        );
         $this->toolbars['view'] = array(
         	'default'           => array(
         		'label'         => $this->localeCatalog->getStr('pages_toolbar'),
