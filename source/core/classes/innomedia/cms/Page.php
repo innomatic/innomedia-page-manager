@@ -100,7 +100,11 @@ class Page
 
             // Retrieve blocks definition
             foreach ($def['blocks'] as $blockDef) {
-                $result[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array('module' => $blockDef['module'], 'name' => $blockDef['name']);
+                $result[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
+                    'module' => $blockDef['module'],
+                    'name' => $blockDef['name'],
+                    'counter' => $blockDef['counter']
+                );
                 if ($blockDef['row'] > $rows) {
                     $rows = $blockDef['row'];
                 }
@@ -143,24 +147,25 @@ class Page
         foreach ($this->blocks as $row => $column) {
             foreach ($column as $position => $blocks) {
                 foreach ($blocks as $block) {
-                        $hasBlockManager = false;
-                        $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+                    $hasBlockManager = false;
+                    $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+                    $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
 
-                        $fqcn = \Innomedia\Block::getClass($this->context, $block['module'], $block['name']);
-                        $included = @include_once $fqcn;
-                        if ($included) {
-                            // Find block class
-                            $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
-                            if (class_exists($class)) {
-                                if ($class::hasBlockManager()) {
-                                    $hasBlockManager = true;
-                                    $headers['0']['label'] = $blockName;
-                                    $managerClass = $class::getBlockManager();
-                                    $manager = new $managerClass($this->module.'/'.$this->pageName, $this->pageId);
-                                    $manager->saveBlock($parameters[$block['module']][$block['name']]);
-                               }
-                            }
+                    $fqcn = \Innomedia\Block::getClass($this->context, $block['module'], $block['name']);
+                    $included = @include_once $fqcn;
+                    if ($included) {
+                        // Find block class
+                        $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
+                        if (class_exists($class)) {
+                            if ($class::hasBlockManager()) {
+                                $hasBlockManager = true;
+                                $headers['0']['label'] = $blockName;
+                                $managerClass = $class::getBlockManager();
+                                $manager = new $managerClass($this->module.'/'.$this->pageName, $this->pageId);
+                                $manager->saveBlock($parameters[$block['module']][$block['name']][$blockCounter], $blockCounter);
+                           }
                         }
+                    }
                 }
             }
         }
@@ -181,6 +186,7 @@ class Page
                         $yaml['blocks'][] = array(
                             'module'   => $block['module'],
                             'name'     => $block['name'],
+                            'counter'  => $block['counter'],
                             'row'      => $row,
                             'column'   => $column,
                             'position' => $position

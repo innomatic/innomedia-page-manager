@@ -65,6 +65,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+                        $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
                         $xml .= '<vertgroup row="'.$row.'" col="'.$column.'"><children>';
 
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
@@ -81,7 +82,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                     $xml .= '<table><args><width>400</width><headers type="array">'.
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><children>'.
-                                        $manager->getManagerXml().'</children></vertgroup></children></table>';
+                                        $manager->getManagerXml($blockCounter).'</children></vertgroup></children></table>';
                                }
                             }
                         }
@@ -185,15 +186,16 @@ var params = kvpairs.join(\'&\');
                 $moduleName = $blockName = '';
 
                 $keys = explode('_', urldecode($param[0]));
-                if (count($keys) < 3) {
+                if (count($keys) < 4) {
                     // Key is not valid
                     continue;
                 }
 
                 $moduleName = array_shift($keys);
                 $blockName = array_shift($keys);
+                $blockCounter = array_shift($keys);
                 $paramName = implode('_', $keys);
-                $decodedParams[$moduleName][$blockName][$paramName] = urldecode($param[1]);
+                $decodedParams[$moduleName][$blockName][$blockCounter][$paramName] = urldecode($param[1]);
             }
         }
         $editorPage->savePage($decodedParams);
