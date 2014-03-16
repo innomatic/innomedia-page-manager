@@ -7,12 +7,15 @@ class Page
     protected $module;
     protected $pageName;
     protected $pageId;
+    protected $pageTitle;
     protected $blocks = array();
     protected $theme;
     protected $rows;
     protected $columns;
     protected $session;
     protected $context;
+    protected $page;
+
     /**
      * Page properties from page definition
      *
@@ -27,6 +30,9 @@ class Page
         $this->pageId   = $pageId;
         $this->session  = $session;
         $this->context  = \Innomedia\Context::instance('\Innomedia\Context');
+        $this->page     = new \Innomedia\Page($this->module, $this->pageName, $this->pageId);
+
+        $this->page->parsePage();
 
         if ($this->session->isValid('innomedia_page_manager_page')) {
             $pageInSession = $this->session->get('innomedia_page_manager_page');
@@ -60,6 +66,12 @@ class Page
     {
         return $this->pageId;
     }
+
+    public function getPage()
+    {
+        return $this->page;
+    }
+
     public function getBlocks()
     {
         return $this->blocks;
@@ -77,6 +89,7 @@ class Page
 
     public function parsePage()
     {
+        // TODO handle layout level blocks
         // TODO handle page instance level blocks
         $page = $this->context->getPagesHome($this->module).$this->pageName.'.local.yml';
         if (!file_exists($page)) {
@@ -144,6 +157,9 @@ class Page
     }
 
     public function savePage($parameters) {
+        // Save page data
+        $this->page->updateContent();
+
         foreach ($this->blocks as $row => $column) {
             foreach ($column as $position => $blocks) {
                 foreach ($blocks as $block) {
@@ -202,6 +218,13 @@ class Page
             return false;
         }
 
+        $this->resetChanges();
+        return true;
+    }
+
+    public function deletePage()
+    {
+        $this->page->deleteContent();
         $this->resetChanges();
         return true;
     }

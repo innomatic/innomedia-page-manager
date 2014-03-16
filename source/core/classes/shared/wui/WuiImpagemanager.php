@@ -20,27 +20,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
     protected function getHTML($module, $page, $pageId = 0, $modified = false)
     {
         $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
-            'innomedia-layout-editor::editor',
+            'innomedia-page-manager::editor',
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
 
         $context = \Innomedia\Context::instance('\Innomedia\Context');
-        /*
-        $modules = $context->getModulesList();
-        $pages_list = array();
-
-        foreach ($modules as $module) {
-            $module_obj = new \Innomedia\Module($context, $module);
-            if (!$module_obj->hasPages()) {
-                continue;
-            }
-            $pages_list[$module] = $module_obj->getPagesList();
-
-            foreach ($pages_list[$module] as $page) {
-                $pagesComboList[$module.'/'.$page] = ucfirst($module).': '.ucfirst($page);
-            }
-        }
- */
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
@@ -51,7 +35,20 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         $xml = '<vertgroup><children>
             <form><name>impagemanager</name>
               <args><id>impagemanager</id></args>
-              <children>
+              <children>';
+
+        if ($editorPage->getPageId() != 0) {
+            $xml .= '
+              <grid><children>
+                <label row="0" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
+                <label row="0" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
+                <label row="1" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
+                <string row="1" col="1"><args><id>page_title</id><value>'.WuiXml::cdata($editorPage->getPage()->getTitle()).'</value><size>100</size></args></string>
+              </children></grid>
+              <horizbar/>';
+        }
+
+        $xml .= '
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
         $blocks = $editorPage->getBlocks();
@@ -114,6 +111,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
     </args>
     			  <events>
                   <click>'.WuiXml::cdata('
+                  var pageTitle = document.getElementById(\'page_title\').value;
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {
@@ -121,7 +119,7 @@ for ( var i = 0; i < form.elements.length; i++ ) {
    kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
 }
 var params = kvpairs.join(\'&\');
-                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', params)').'</click>
+                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageTitle, params)').'</click>
     			  </events>
   </button>
   <button>
@@ -136,6 +134,19 @@ var params = kvpairs.join(\'&\');
     			    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
     			  </events>
   </button>
+  <button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>trash</themeimage>
+      <label>'.$localeCatalog->getStr('delete_button').'</label>
+      <action>javascript:void(0)</action>
+    </args>
+    			  <events>
+    			    <click>xajax_WuiImpagemanagerDeletePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
+    			  </events>
+  </button>
+
 ';
 
         $xml .= '</children></horizgroup>
@@ -164,7 +175,7 @@ var params = kvpairs.join(\'&\');
         return $objResponse;
     }
 
-    public static function ajaxSavePage($module, $pageName, $pageId, $parameters)
+    public static function ajaxSavePage($module, $pageName, $pageId, $pageTitle, $parameters)
     {
         $objResponse = new XajaxResponse();
         if (!(strlen($module) && strlen($pageName))) {
@@ -178,6 +189,7 @@ var params = kvpairs.join(\'&\');
             $pageId
         );
         $editorPage->parsePage();
+        $editorPage->getPage()->setTitle($pageTitle);
         $decodedParams = array();
         foreach (explode('&', $parameters) as $chunk) {
             $param = explode("=", $chunk);
@@ -222,6 +234,27 @@ var params = kvpairs.join(\'&\');
         $editorPage->resetChanges();
 
         $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
+
+        return $objResponse;
+    }
+
+    public static function ajaxDeletePage($module, $pageName, $pageId)
+    {
+        $objResponse = new XajaxResponse();
+        if (!(strlen($module) && strlen($pageName) && strlen($pageId))) {
+            return $objResponse;
+        }
+
+        $editorPage = new \Innomedia\Cms\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $module,
+            $pageName,
+            $pageId
+        );
+        $editorPage->parsePage();
+        $editorPage->deletePage();
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;
     }
