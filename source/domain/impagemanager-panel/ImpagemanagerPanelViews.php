@@ -88,6 +88,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $pageId    = isset($eventData['pageid']) && (int)$eventData['pageid'] != 0 ? $eventData['pageid'] : 0;
 
         $pagesComboList = array();
+        $pagesComboList[] = '';
 
         foreach ($pagesList as $pageItem) {
             list($module, $page) = explode('/', $pageItem);
@@ -114,16 +115,22 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               var page = document.getElementById(\'page\');
               var pagevalue = page.options[page.selectedIndex].value;
               var elements = pagevalue.split(\'/\');
-              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1], 0)</change>
+              xajax_LoadContentList(elements[0], elements[1])</change>
               </events>
             </combobox>
+            <divframe><args><id>content_list</id></args><children><void /></children></divframe>
+            <!--
             <formarg><args><id>pageid</id><value>'.$pageId.'</value></args></formarg>
+            -->
             </children>
             </horizgroup>
             <horizbar />
+            <divframe><args><id>content_editor</id></args><children><void /></children></divframe>
             <impagemanager>
+            <!--
               <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page><pageid>'.$pageId.'</pageid></args>
-            </impagemanager>
+              -->
+              </impagemanager>
             </children>
             </vertgroup>';
     }

@@ -19,6 +19,10 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
     protected function getHTML($module, $page, $pageId = 0, $modified = false)
     {
+        if (!(strlen($module) > 0 and strlen($page) > 0)) {
+            return WuiXml::getContentFromXml('', '<void/>');
+        }
+
         $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
             'innomedia-page-manager::editor',
             \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()

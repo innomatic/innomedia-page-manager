@@ -46,6 +46,45 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
         $objResponse->addAssign("pageeditor", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('pageeditor', $xml));
 
         return $objResponse;
-
     }
+
+    public static function ajaxLoadContentList($module, $page)
+    {
+        $domainDa = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
+            ->getCurrentDomain()
+            ->getDataAccess();
+
+        $pagesQuery = $domainDa->execute(
+            "SELECT id, title
+            FROM innomedia_pages
+            WHERE page=".$domainDa->formatText($module.'/'.$page)."
+            ORDER BY title"
+        );
+
+        $pages = array();
+        $pages[] = '';
+
+        while (!$pagesQuery->eof) {
+            $pages[$pagesQuery->getFields('id')] = $pagesQuery->getFields('title');
+            $pagesQuery->moveNext();
+        }
+
+        $xml = '<combobox>
+            <args>
+            <id>pageid</id>
+            <elements type="array">'.\Shared\Wui\WuiXml::encode($pages).'</elements>
+            </args>
+            <events>
+            <change>'.\Shared\Wui\WuiXml::cdata('
+        var pageid = document.getElementById(\'pageid\').value;
+              xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid)').'</change>
+            </events>
+            </combobox>';
+
+        $objResponse = new XajaxResponse();
+        $objResponse->addAssign("content_list", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('contentlist', $xml));
+
+        return $objResponse;
+    }
+
 }
