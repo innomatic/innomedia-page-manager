@@ -63,11 +63,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             for ($column = 1; $column <= $columns; $column++) {
                 if (isset($blocks[$row][$column])) {
                     $positions = count($blocks[$row][$column]);
+                    $xml .= '<vertgroup row="'.$row.'" col="'.$column.'"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
                         $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
-                        $xml .= '<vertgroup row="'.$row.'" col="'.$column.'"><children>';
+
 
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
                         $included = @include_once $fqcn;
@@ -91,8 +92,8 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         if (!$hasBlockManager) {
                             $xml .= '<label><args><label>'.WuiXml::cdata($blockName).'</label></args></label>';
                         }
-                        $xml .= '</children></vertgroup>';
                     }
+                    $xml .= '</children></vertgroup>';
                 } else {
                 }
             }
@@ -114,8 +115,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-                  <click>'.WuiXml::cdata('
-                  var pageTitle = document.getElementById(\'page_title\').value;
+                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageTitle = document.getElementById(\'page_title\').value;' : 'var pageTitle = \'\';').'
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {
@@ -137,7 +137,10 @@ var params = kvpairs.join(\'&\');
     			  <events>
     			    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
     			  </events>
-  </button>
+  </button>';
+
+  if ($pageId != 0) {
+      $xml .= '
   <button>
     <args>
       <horiz>true</horiz>
@@ -150,8 +153,8 @@ var params = kvpairs.join(\'&\');
     			    <click>xajax_WuiImpagemanagerDeletePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
     			  </events>
   </button>
-
 ';
+    }
 
         $xml .= '</children></horizgroup>
             </children></vertgroup>';
