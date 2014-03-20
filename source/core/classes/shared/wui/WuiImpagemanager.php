@@ -46,8 +46,8 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
               <grid><children>
                 <label row="0" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
                 <label row="0" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
-                <label row="1" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
-                <string row="1" col="1"><args><id>page_title</id><value>'.WuiXml::cdata($editorPage->getPage()->getTitle()).'</value><size>100</size></args></string>
+                <label row="1" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
+                <string row="1" col="1"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>100</size></args></string>
               </children></grid>
               <horizbar/>';
         }
@@ -115,7 +115,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageTitle = document.getElementById(\'page_title\').value;' : 'var pageTitle = \'\';').'
+                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value;' : 'var pageName = \'\';').'
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {
@@ -123,7 +123,7 @@ for ( var i = 0; i < form.elements.length; i++ ) {
    kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
 }
 var params = kvpairs.join(\'&\');
-                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageTitle, params)').'</click>
+                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, params)').'</click>
     			  </events>
   </button>
   <button>
@@ -182,7 +182,7 @@ var params = kvpairs.join(\'&\');
         return $objResponse;
     }
 
-    public static function ajaxSavePage($module, $pageName, $pageId, $pageTitle, $parameters)
+    public static function ajaxSavePage($module, $pageName, $pageId, $pageName, $parameters)
     {
         $objResponse = new XajaxResponse();
         if (!(strlen($module) && strlen($pageName))) {
@@ -196,7 +196,7 @@ var params = kvpairs.join(\'&\');
             $pageId
         );
         $editorPage->parsePage();
-        $editorPage->getPage()->setTitle($pageTitle);
+        $editorPage->getPage()->setName($pageName);
         $decodedParams = array();
         foreach (explode('&', $parameters) as $chunk) {
             $param = explode("=", $chunk);

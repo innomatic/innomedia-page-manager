@@ -7,7 +7,7 @@ class Page
     protected $module;
     protected $pageName;
     protected $pageId;
-    protected $pageTitle;
+    protected $pageName;
     protected $blocks = array();
     protected $theme;
     protected $rows;
@@ -157,8 +157,10 @@ class Page
     }
 
     public function savePage($parameters) {
-        // Save page data
-        $this->page->updateContent();
+        if ($this->pageId != 0) {
+            // Save page data
+            $this->page->updateContent();
+        }
 
         foreach ($this->blocks as $row => $column) {
             foreach ($column as $position => $blocks) {

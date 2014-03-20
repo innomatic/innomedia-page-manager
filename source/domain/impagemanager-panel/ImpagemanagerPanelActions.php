@@ -55,17 +55,17 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             ->getDataAccess();
 
         $pagesQuery = $domainDa->execute(
-            "SELECT id, title
+            "SELECT id, name
             FROM innomedia_pages
             WHERE page=".$domainDa->formatText($module.'/'.$page)."
-            ORDER BY title"
+            ORDER BY name"
         );
 
         $pages = array();
         $pages[] = '';
 
         while (!$pagesQuery->eof) {
-            $pages[$pagesQuery->getFields('id')] = $pagesQuery->getFields('title');
+            $pages[$pagesQuery->getFields('id')] = $pagesQuery->getFields('name');
             $pagesQuery->moveNext();
         }
 
