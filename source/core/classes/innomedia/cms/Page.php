@@ -5,7 +5,6 @@ namespace Innomedia\Cms;
 class Page
 {
     protected $module;
-    protected $pageName;
     protected $pageId;
     protected $pageName;
     protected $blocks = array();
