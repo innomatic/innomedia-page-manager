@@ -39,22 +39,30 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         $xml = '<vertgroup><children>
             <form><name>impagemanager</name>
               <args><id>impagemanager</id></args>
-              <children>';
+              <children>
+
+              <grid><children>';
+
+        $gridRow = 0;
 
         if ($editorPage->getPageId() != 0) {
             $xml .= '
-              <grid><children>
-                <label row="0" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
-                <label row="0" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
-                <label row="1" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
-                <string row="1" col="1"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
-                <label row="2" col="0"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
-                <string row="2" col="1"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
-              </children></grid>
-              <horizbar/>';
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
+                <label row="'.$gridRow++.'" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
+                <string row="'.$gridRow++.'" col="1"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
+                <string row="'.$gridRow++.'" col="1"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
+              ';
         }
 
         $xml .= '
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_description_label')).'</label></args></label>
+                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_description</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_description']).'</value><size>80</size></args></string>
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_keys_label')).'</label></args></label>
+                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_keys</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_keys']).'</value><size>80</size></args></string>
+              </children></grid>
+              <horizbar/>
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
         $blocks = $editorPage->getBlocks();
@@ -117,7 +125,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value;' : 'var pageName = \'\';').'
+                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'').'
+var metaKeys  = document.getElementById(\'page_meta_keys\').value;
+var metaDescription = document.getElementById(\'page_meta_description\').value;
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {
@@ -125,7 +135,7 @@ for ( var i = 0; i < form.elements.length; i++ ) {
    kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
 }
 var params = kvpairs.join(\'&\');
-                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, params)').'</click>
+                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, metaDescription, metaKeys, params)').'</click>
     			  </events>
   </button>
   <button>
@@ -184,21 +194,25 @@ var params = kvpairs.join(\'&\');
         return $objResponse;
     }
 
-    public static function ajaxSavePage($module, $pageName, $pageId, $pageName, $parameters)
+    public static function ajaxSavePage($module, $page, $pageId, $pageName, $urlKeywords, $metaDescription, $metaKeys, $parameters)
     {
         $objResponse = new XajaxResponse();
-        if (!(strlen($module) && strlen($pageName))) {
+        if (!(strlen($module) && strlen($page))) {
             return $objResponse;
         }
 
         $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $pageName,
+            $page,
             $pageId
         );
         $editorPage->parsePage();
         $editorPage->getPage()->setName($pageName);
+        $editorPage->getPage()->setUrlKeywords($urlKeywords);
+        $editorPage->getPage()->setParameter('meta_description', $metaDescription);
+        $editorPage->getPage()->setParameter('meta_keys', $metaKeys);
+
         $decodedParams = array();
         foreach (explode('&', $parameters) as $chunk) {
             $param = explode("=", $chunk);
@@ -221,7 +235,7 @@ var params = kvpairs.join(\'&\');
         }
         $editorPage->savePage($decodedParams);
 
-        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
 
         return $objResponse;
     }
