@@ -73,7 +73,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             for ($column = 1; $column <= $columns; $column++) {
                 if (isset($blocks[$row][$column])) {
                     $positions = count($blocks[$row][$column]);
-                    $xml .= '<vertgroup row="'.$row.'" col="'.$column.'" haling="left" valign="top"><children>';
+                    $xml .= '<vertgroup row="'.$row.'" col="'.$column.'" halign="left" valign="top"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
