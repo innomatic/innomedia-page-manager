@@ -169,18 +169,15 @@ class Page
                     $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
 
                     $fqcn = \Innomedia\Block::getClass($this->context, $block['module'], $block['name']);
-                    $included = @include_once $fqcn;
-                    if ($included) {
-                        // Find block class
-                        $class = substr($fqcn, strrpos($fqcn, '/') ? strrpos($fqcn, '/') + 1 : 0, - 4);
-                        if (class_exists($class)) {
-                            if ($class::hasBlockManager()) {
-                                $hasBlockManager = true;
-                                $headers['0']['label'] = $blockName;
-                                $managerClass = $class::getBlockManager();
+                    if (class_exists($fqcn)) {
+                        if ($fqcn::hasBlockManager()) {
+                            $hasBlockManager = true;
+                            $headers['0']['label'] = $blockName;
+                            $managerClass = $fqcn::getBlockManager();
+                            if (class_exists($managerClass)) {
                                 $manager = new $managerClass($this->module.'/'.$this->pageName, $blockCounter, $this->pageId);
                                 $manager->saveBlock($parameters[$block['module']][$block['name']][$blockCounter]);
-                           }
+                            }
                         }
                     }
                 }
