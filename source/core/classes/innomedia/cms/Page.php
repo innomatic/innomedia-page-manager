@@ -101,6 +101,8 @@ class Page
 
         // Checks if the page definition exists in session
         if (!$this->session->isValid('innomedia_page_manager_blocks')) {
+            $pageObj = new \Innomedia\Page($this->module, $this->pageName, $this->pageId);
+
             $def = yaml_parse_file($page);
             $properties = array();
             if (isset($def['properties'])) {
@@ -110,7 +112,30 @@ class Page
             $rows = $columns = 0;
             $theme = $def['theme'];
 
-            // Retrieve blocks definition
+            // Retrieve blocks layout definition
+            $layoutBlocks = $pageObj->getLayoutBlocks();
+
+            if (is_array($layoutBlocks)) {
+                foreach ($layoutBlocks as $blockDef) {
+                    if (!isset($blockDef['counter'])) {
+                        $blockDef['counter'] = 1;
+                    }
+
+                    $result[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
+                        'module' => $blockDef['module'],
+                        'name' => $blockDef['name'],
+                        'counter' => $blockDef['counter']
+                    );
+                    if ($blockDef['row'] > $rows) {
+                        $rows = $blockDef['row'];
+                    }
+                    if ($blockDef['column'] > $columns) {
+                        $columns = $blockDef['column'];
+                    }
+                }
+            }
+
+            // Retrieve page blocks definition
             foreach ($def['blocks'] as $blockDef) {
                 $result[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
                     'module' => $blockDef['module'],
