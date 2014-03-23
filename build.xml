@@ -50,19 +50,20 @@
     -->
 	<target name="build" depends="init,clean,package" />
 
-	<target name="dev">
-		<!-- Remove old files -->
-	    <mkdir dir="dev" />
-		<delete>
-			<fileset dir="${basedir}/dev" includes="**.*" />
-		</delete>
-	    <mkdir dir="dev" />
-        <copy todir="${basedir}/dev">
-            <fileset dir="${basedir}/source">
-                <include name="**" />
-                <exclude name="**/.git" />
-            </fileset>
-        </copy>
+	<target name="dev" depends="build">
+        <exec executable="scp">
+            <arg value="${basedir}/build/${name}-${version}.tgz" />
+            <arg value="innomatic-dev:/tmp/" />
+        </exec>
+
+        <exec executable="ssh">
+            <arg value="innomatic-dev" />
+            <arg value="-C" />
+            <arg value="php" />
+            <arg value="/vagrant/dev/innomatic/core/scripts/application.php" />
+            <arg value="deploy" />
+            <arg value="/tmp/${name}-${version}.tgz" />
+        </exec>
 	</target>
 
 </project>
