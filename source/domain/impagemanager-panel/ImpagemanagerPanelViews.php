@@ -118,6 +118,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             <children>
             <horizgroup><args><width>0%</width></args>
             <children>
+            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('content_type_label')).'</label></args></label>
             <combobox><args><id>page</id><default>'.WuiXml::cdata($firstPage).'</default><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
               <events>
               <change>
@@ -161,6 +162,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         $this->pageXml = '<vertgroup><children>
             <horizgroup><args><width>0%</width></args><children>
+            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('content_type_label')).'</label></args></label>
             <combobox><args><id>pagetype</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
             </combobox>
 
@@ -210,6 +212,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             <children>
             <horizgroup><args><width>0%</width></args>
             <children>
+            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('page_type_label')).'</label></args></label>
             <combobox><args><id>page</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
               <events>
               <change>

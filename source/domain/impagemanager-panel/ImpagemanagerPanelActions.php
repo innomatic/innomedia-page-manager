@@ -50,6 +50,11 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
 
     public static function ajaxLoadContentList($module, $page)
     {
+        $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
+            'innomedia-page-manager::pagemanager_panel',
+            InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+        );
+
         $domainDa = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
             ->getCurrentDomain()
             ->getDataAccess();
@@ -69,7 +74,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             $pagesQuery->moveNext();
         }
 
-        $xml = '<combobox>
+        $xml = '<horizgroup><children>
+            <label><args><label>'.WuiXml::cdata($localeCatalog->getStr('content_item_label')).'</label></args></label>
+            <combobox>
             <args>
             <id>pageid</id>
             <elements type="array">'.\Shared\Wui\WuiXml::encode($pages).'</elements>
@@ -79,7 +86,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
         var pageid = document.getElementById(\'pageid\').value;
               xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid)').'</change>
             </events>
-            </combobox>';
+            </combobox>
+
+            </children></horizgroup>';
 
         $objResponse = new XajaxResponse();
         $objResponse->addAssign("content_list", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('contentlist', $xml));
