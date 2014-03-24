@@ -136,8 +136,14 @@ var metaDescription = document.getElementById(\'page_meta_description\').value;
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {
-   var e = form.elements[i];
-   kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+    var e = form.elements[i];
+    if (e.type == \'checkbox\') {
+        if (e.checked) {
+            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+        }
+    } else {
+        kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+    }
 }
 var params = kvpairs.join(\'&\');
                   xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, metaDescription, metaKeys, params)').'</click>
