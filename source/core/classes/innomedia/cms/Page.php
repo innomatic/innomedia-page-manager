@@ -127,6 +127,8 @@ class Page
                     $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
                     if (!in_array($this->scope, $scopes)) {
                         continue;
+                    } elseif ($this->scope == 'page' && in_array('content', $scopes) && $this->page->requiresId()) {
+                        continue;
                     }
 
                     if (!isset($blockDef['counter'])) {
@@ -152,6 +154,8 @@ class Page
                 // Check if the block supports current scope
                 $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
                 if (!in_array($this->scope, $scopes)) {
+                    continue;
+                } elseif ($this->scope == 'page' && in_array('content', $scopes) && $this->page->requiresId()) {
                     continue;
                 }
 

@@ -56,12 +56,15 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
               ';
         }
 
-        $xml .= '
+        if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
+            $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_description_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1"><args><id>page_meta_description</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_description']).'</value><size>80</size></args></string>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_keys_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_keys</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_keys']).'</value><size>80</size></args></string>
-              </children></grid>
+                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_keys</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_keys']).'</value><size>80</size></args></string>';
+        }
+
+        $xml .= '     </children></grid>
               <horizbar/>
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
