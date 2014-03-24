@@ -14,6 +14,7 @@ class Page
     protected $session;
     protected $context;
     protected $page;
+    protected $scope;
 
     /**
      * Page properties from page definition
@@ -27,6 +28,11 @@ class Page
         $this->module   = strlen($module) ? $module : 'home';
         $this->pageName = strlen($pageName) ? $pageName : 'index';
         $this->pageId   = $pageId;
+        if ($pageId != 0) {
+            $this->scope = 'content';
+        } else {
+            $this->scope = 'page';
+        }
         $this->session  = $session;
         $this->context  = \Innomedia\Context::instance('\Innomedia\Context');
         $this->page     = new \Innomedia\Page($this->module, $this->pageName, $this->pageId);
@@ -117,6 +123,12 @@ class Page
 
             if (is_array($layoutBlocks)) {
                 foreach ($layoutBlocks as $blockDef) {
+                    // Check if the block supports current scope
+                    $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
+                    if (!in_array($this->scope, $scopes)) {
+                        continue;
+                    }
+
                     if (!isset($blockDef['counter'])) {
                         $blockDef['counter'] = 1;
                     }
@@ -137,6 +149,12 @@ class Page
 
             // Retrieve page blocks definition
             foreach ($def['blocks'] as $blockDef) {
+                // Check if the block supports current scope
+                $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
+                if (!in_array($this->scope, $scopes)) {
+                    continue;
+                }
+
                 $result[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
                     'module' => $blockDef['module'],
                     'name' => $blockDef['name'],

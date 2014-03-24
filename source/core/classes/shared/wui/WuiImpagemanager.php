@@ -69,11 +69,16 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         $columns = $editorPage->getColumns();
         $rows = $editorPage->getRows();
 
+        $gridRow = -1;
         for ($row = 1; $row <= $rows; $row++) {
+            if (isset($blocks[$row])) {
+                $gridRow++;
+            }
+
             for ($column = 1; $column <= $columns; $column++) {
                 if (isset($blocks[$row][$column])) {
                     $positions = count($blocks[$row][$column]);
-                    $xml .= '<vertgroup row="'.$row.'" col="'.$column.'" halign="left" valign="top"><children>';
+                    $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
@@ -88,9 +93,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                 $managerClass = $fqcn::getBlockManager();
                                 if (class_exists($managerClass)) {
                                     $manager = new $managerClass($module.'/'.$page, $blockCounter, $pageId);
-                                    $xml .= '<table><args><width>400</width><headers type="array">'.
+                                    $xml .= '<table><args><width>'.($column == 2 ? '700' : '250').'</width><headers type="array">'.
                                         WuiXml::encode($headers)
-                                        .'</headers></args><children><vertgroup row="0" col="0"><children>'.
+                                        .'</headers></args><children><vertgroup row="0" col="0"><args><width>'.($column == 2 ? '700' : '250').'</width></args><children>'.
                                         $manager->getManagerXml().'</children></vertgroup></children></table>';
                                }
                             }
