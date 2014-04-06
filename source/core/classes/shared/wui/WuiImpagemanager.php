@@ -54,6 +54,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
               ';
+
+            // Get page instance blocks
+            $instanceBlocks = $editorPage->getInstanceBlocks();
         }
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
@@ -68,13 +71,15 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
               <horizbar/>
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
-        $blocks = $editorPage->getBlocks();
-        $columns = $editorPage->getColumns();
-        $rows = $editorPage->getRows();
+        $blocks         = $editorPage->getBlocks();
+        $userBlocks     = $editorPage->getUserBlocks();
+        $columns        = $editorPage->getColumns();
+        $rows           = $editorPage->getRows();
+        $cellParameters = $editorPage->getCellParameters();
 
         $gridRow = -1;
         for ($row = 1; $row <= $rows; $row++) {
-            if (isset($blocks[$row])) {
+            if (isset($blocks[$row]) or isset($cellParameters[$row])) {
                 $gridRow++;
             }
 
@@ -91,9 +96,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
                         if (class_exists($fqcn)) {
                             if ($fqcn::hasBlockManager()) {
-                                $hasBlockManager = true;
+                                $hasBlockManager       = true;
                                 $headers['0']['label'] = $blockName;
-                                $managerClass = $fqcn::getBlockManager();
+                                $managerClass          = $fqcn::getBlockManager();
                                 if (class_exists($managerClass)) {
                                     $manager = new $managerClass($module.'/'.$page, $blockCounter, $pageId);
                                     $xml .= '<table><args><width>'.($column == 2 ? '700' : '250').'</width><headers type="array">'.
@@ -109,7 +114,56 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         }
                     }
                     $xml .= '</children></vertgroup>';
-                } else {
+                } elseif (isset($cellParameters[$row][$column])) {
+                    if (isset($cellParameters[$row][$column]['accepts']) && is_array($cellParameters[$row][$column]['accepts'])) {
+                        $supportedBlocks = \Innomedia\Block::getBlocksByTypes($cellParameters[$row][$column]['accepts']);
+                        if (count($supportedBlocks)) {
+                            $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
+
+                            // Build the list of supported blocks
+                            $supportedList = array();
+                            foreach ($supportedBlocks as $supportedBlock) {
+                                list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
+                                $supportedList[$supportedBlock] = $supportedModule.': '.$supportedBlock;
+                            }
+
+                            $xml .= '<vertframe><children>';
+                            $xml .= '<horizgroup><args><width>0%</width></args><children>';
+                            $xml .= '<combobox><args><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
+                            $xml .= '<button>
+    <args>
+      <horiz>true</horiz>
+      <frame>false</frame>
+      <themeimage>mathadd</themeimage>
+      <action>javascript:void(0)</action>
+    </args>
+    			  <events>
+                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'').'
+var metaKeys  = document.getElementById(\'page_meta_keys\').value;
+var metaDescription = document.getElementById(\'page_meta_description\').value;
+                  var kvpairs = [];
+var form = document.getElementById(\'impagemanager\');
+for ( var i = 0; i < form.elements.length; i++ ) {
+    var e = form.elements[i];
+    if (e.type == \'checkbox\') {
+        if (e.checked) {
+            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+        }
+    } else {
+        kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+    }
+}
+var params = kvpairs.join(\'&\');
+                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, metaDescription, metaKeys, params)').'</click>
+    			  </events>
+  </button>
+';
+                            $xml .= '</children></horizgroup>';
+                            $xml .= '</children></vertframe>';
+
+                            $xml .= '</children></vertgroup>';
+                        }
+                    }
                 }
             }
         }
