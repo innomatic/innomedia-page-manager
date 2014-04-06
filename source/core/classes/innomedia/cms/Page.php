@@ -293,7 +293,7 @@ class Page
         $this->layout         = $layout;
     }
 
-    public function addBlock($module, $block, $row, $column, $position) {
+    public function addBlock($module, $block, $blockRow, $blockColumn, $blockPosition) {
         $counter = 1;
 
         // Find the biggest counter for this block type
@@ -309,10 +309,10 @@ class Page
         }
 
         if ($this->scope == 'page') {
-            $this->userBlocks[$row][$column][$position] = array('module' => $module, 'name' => $block, 'counter' => $counter);
+            $this->userBlocks[$blockRow][$blockColumn][$blockPosition] = array('module' => $module, 'name' => $block, 'counter' => $counter);
             $this->session->put('innomedia_page_manager_user_blocks', $this->userBlocks);
         } else {
-            $this->instanceBlocks[$row][$column][$position] = array('module' => $module, 'name' => $block, 'counter' => $counter);
+            $this->instanceBlocks[$blockRow][$blockColumn][$blockPosition] = array('module' => $module, 'name' => $block, 'counter' => $counter);
             $this->session->put('innomedia_page_manager_instance_blocks', $this->instanceBlocks);
         }
 

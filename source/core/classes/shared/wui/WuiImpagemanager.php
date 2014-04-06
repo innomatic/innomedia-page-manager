@@ -115,6 +115,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     }
                     $xml .= '</children></vertgroup>';
                 } elseif (isset($cellParameters[$row][$column])) {
+                    // Check if the cell supports user/instance blocks for the current cell and scope
                     if (
                         isset($cellParameters[$row][$column]['accepts'])
                         && is_array($cellParameters[$row][$column]['accepts'])
@@ -133,7 +134,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                         $hasBlockManager = false;
                                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
                                         $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
-
 
                                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
                                         if (class_exists($fqcn)) {
@@ -206,11 +206,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                             $supportedList = array();
                             foreach ($supportedBlocks as $supportedBlock) {
                                 list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
-                                $supportedList[$supportedBlock] = $supportedModule.': '.$supportedBlock;
+                                $supportedList[$supportedModule.'/'.$supportedBlock] = $supportedModule.': '.$supportedBlock;
                             }
 
                             $xml .= '<horizgroup><args><width>0%</width></args><children>';
-                            $xml .= '<combobox><args><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
+                            $xml .= '<combobox><args><id>addblockname</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
                             $xml .= '<button>
     <args>
       <horiz>true</horiz>
@@ -219,23 +219,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'').'
-var metaKeys  = document.getElementById(\'page_meta_keys\').value;
-var metaDescription = document.getElementById(\'page_meta_description\').value;
-                  var kvpairs = [];
-var form = document.getElementById(\'impagemanager\');
-for ( var i = 0; i < form.elements.length; i++ ) {
-    var e = form.elements[i];
-    if (e.type == \'checkbox\') {
-        if (e.checked) {
-            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
-        }
-    } else {
-        kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
-    }
-}
-var params = kvpairs.join(\'&\');
-                  xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, metaDescription, metaKeys, params)').'</click>
+                  <click>'.WuiXml::cdata('
+              var page = document.getElementById(\'addblockname\');
+              var pagevalue = page.options[page.selectedIndex].value;
+              var elements = pagevalue.split(\'/\');
+    			    xajax_WuiImpagemanagerAddBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', elements[0], elements[1], \''.$row.'\', \''.$column.'\', \''.($position+1).'\');
+                    ').'</click>
     			  </events>
   </button>
 ';
@@ -335,6 +324,27 @@ var params = kvpairs.join(\'&\');
         $editorPage->parsePage();
 
         $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
+
+        return $objResponse;
+    }
+
+    public static function ajaxAddBlock($module, $page, $pageId, $blockModule, $blockName, $row, $column, $position)
+    {
+        $objResponse = new XajaxResponse();
+        if (!(strlen($module) && strlen($page))) {
+            return $objResponse;
+        }
+
+        $editorPage = new \Innomedia\Cms\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $module,
+            $page,
+            $pageId
+        );
+        $editorPage->parsePage();
+        $editorPage->addBlock($blockModule, $blockName, $row, $column, $position);
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
 
         return $objResponse;
     }
