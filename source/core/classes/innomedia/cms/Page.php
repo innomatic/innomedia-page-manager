@@ -258,6 +258,38 @@ class Page
             // Retrieve content blocks definition
             $instanceBlocks = array();
 
+            if ($this->scope == 'content') {
+                $def = $pageObj->getPageInstanceBlocks();
+
+                foreach ($def['blocks'] as $blockDef) {
+                    // Check if the block supports current scope
+                    $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
+                    if (!in_array($this->scope, $scopes)) {
+                        continue;
+                    }
+
+                    $instanceBlocks[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
+                        'module'  => $blockDef['module'],
+                        'name'    => $blockDef['name'],
+                        'counter' => $blockDef['counter']
+                    );
+                    if ($blockDef['row'] > $rows) {
+                        $rows = $blockDef['row'];
+                    }
+                    if ($blockDef['column'] > $columns) {
+                        $columns = $blockDef['column'];
+                    }
+                }
+                ksort($instanceBlocks);
+                foreach ($instanceBlocks as $row => $column) {
+                    ksort($instanceBlocks[$row]);
+                    foreach ($instanceBlocks[$row] as $row2 => $column2) {
+                        // TODO fix warning removing @
+                        @ksort($instanceBlocks[$row][$column2]);
+                    }
+                }
+            }
+
             // Stores page definition in the session
             $this->session->put('innomedia_page_manager_blocks',          $result);
             $this->session->put('innomedia_page_manager_instance_blocks', $instanceBlocks);
@@ -408,11 +440,36 @@ class Page
                 }
             }
         }
-        // @TODO handle page instance level blocks
-        //
+
+        if ($this->scope == 'content' and $this->pageId != 0) {
+            $instanceBlocks = array();
+            foreach ($this->instanceBlocks as $row => $columns) {
+                foreach ($columns as $column => $positions) {
+                    if (is_array($positions)) {
+                        foreach ($positions as $position => $block) {
+                            $instanceBlocks[] = array(
+                                'module'   => $block['module'],
+                                'name'     => $block['name'],
+                                'counter'  => $block['counter'],
+                                'row'      => $row,
+                                'column'   => $column,
+                                'position' => $position
+                            );
+                        }
+                    }
+                }
+            }
+
+            $domainDa = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
+                ->getCurrentDomain()
+                ->getDataAccess();
+
+            $domainDa->execute('UPDATE innomedia_pages SET blocks='.$domainDa->formatText(json_encode($instanceBlocks)).' WHERE id='.$this->pageId);
+        }
+
         // If the page contains user blocks we must update the page definition
         // file with the updated user blocks list
-        if ($this->scope == 'page' && !is_array($this->userBlocks)) {
+        if ($this->scope != 'page') {
             return true;
         }
 
