@@ -409,7 +409,7 @@ class Page
             }
         }
         // @TODO handle page instance level blocks
-
+        //
         // If the page contains user blocks we must update the page definition
         // file with the updated user blocks list
         if ($this->scope == 'page' && !is_array($this->userBlocks)) {

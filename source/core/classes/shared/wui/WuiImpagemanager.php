@@ -54,9 +54,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
               ';
-
-            // Get page instance blocks
-            $instanceBlocks = $editorPage->getInstanceBlocks();
         }
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
@@ -72,7 +69,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             <grid><args><width>100%</width></args><children>';
         $editorPage->parsePage();
         $blocks         = $editorPage->getBlocks();
-        $userBlocks     = $editorPage->getUserBlocks();
+        if ($editorPage->getScope() == 'page') {
+            $userBlocks = $editorPage->getUserBlocks();
+        } else {
+            $userBlocks = $editorPage->getInstanceBlocks();
+        }
         $columns        = $editorPage->getColumns();
         $rows           = $editorPage->getRows();
         $cellParameters = $editorPage->getCellParameters();
@@ -125,8 +126,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         $supportedBlocks = \Innomedia\Block::getBlocksByTypes($cellParameters[$row][$column]['accepts']);
                         if (count($supportedBlocks)) {
                             $xml .= '<vertframe row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
+                            $position = 0;
 
-                            if ($editorPage->getScope() == 'page') {
+                            if (true or $editorPage->getScope() == 'page') {
                                 if (isset($userBlocks[$row][$column])) {
                                     $positions = count($userBlocks[$row][$column]);
                                     foreach ($userBlocks[$row][$column] as $position => $block) {
