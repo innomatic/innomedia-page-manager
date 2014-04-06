@@ -261,31 +261,33 @@ class Page
             if ($this->scope == 'content') {
                 $def = $pageObj->getPageInstanceBlocks();
 
-                foreach ($def['blocks'] as $blockDef) {
-                    // Check if the block supports current scope
-                    $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
-                    if (!in_array($this->scope, $scopes)) {
-                        continue;
-                    }
+                if (is_array($def)) {
+                    foreach ($def as $blockDef) {
+                        // Check if the block supports current scope
+                        $scopes = \Innomedia\Block::getScopes($this->context, $blockDef['module'], $blockDef['name']);
+                        if (!in_array($this->scope, $scopes)) {
+                            continue;
+                        }
 
-                    $instanceBlocks[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
-                        'module'  => $blockDef['module'],
-                        'name'    => $blockDef['name'],
-                        'counter' => $blockDef['counter']
-                    );
-                    if ($blockDef['row'] > $rows) {
-                        $rows = $blockDef['row'];
+                        $instanceBlocks[$blockDef['row']][$blockDef['column']][$blockDef['position']] = array(
+                            'module'  => $blockDef['module'],
+                            'name'    => $blockDef['name'],
+                            'counter' => $blockDef['counter']
+                        );
+                        if ($blockDef['row'] > $rows) {
+                            $rows = $blockDef['row'];
+                        }
+                        if ($blockDef['column'] > $columns) {
+                            $columns = $blockDef['column'];
+                        }
                     }
-                    if ($blockDef['column'] > $columns) {
-                        $columns = $blockDef['column'];
-                    }
-                }
-                ksort($instanceBlocks);
-                foreach ($instanceBlocks as $row => $column) {
-                    ksort($instanceBlocks[$row]);
-                    foreach ($instanceBlocks[$row] as $row2 => $column2) {
-                        // TODO fix warning removing @
-                        @ksort($instanceBlocks[$row][$column2]);
+                    ksort($instanceBlocks);
+                    foreach ($instanceBlocks as $row => $column) {
+                        ksort($instanceBlocks[$row]);
+                        foreach ($instanceBlocks[$row] as $row2 => $column2) {
+                            // TODO fix warning removing @
+                            @ksort($instanceBlocks[$row][$column2]);
+                        }
                     }
                 }
             }
