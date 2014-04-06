@@ -115,7 +115,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     }
                     $xml .= '</children></vertgroup>';
                 } elseif (isset($cellParameters[$row][$column])) {
-                    if (isset($cellParameters[$row][$column]['accepts']) && is_array($cellParameters[$row][$column]['accepts'])) {
+                    if (
+                        isset($cellParameters[$row][$column]['accepts'])
+                        && is_array($cellParameters[$row][$column]['accepts'])
+                        && isset($cellParameters[$row][$column]['scope'])
+                        && $cellParameters[$row][$column]['scope'] == $editorPage->getScope()
+                    ) {
                         $supportedBlocks = \Innomedia\Block::getBlocksByTypes($cellParameters[$row][$column]['accepts']);
                         if (count($supportedBlocks)) {
                             $xml .= '<vertframe row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
