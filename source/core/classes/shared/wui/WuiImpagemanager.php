@@ -253,9 +253,13 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
       <action>javascript:void(0)</action>
     </args>
     			  <events>
-                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'').'
-var metaKeys  = document.getElementById(\'page_meta_keys\').value;
-var metaDescription = document.getElementById(\'page_meta_description\').value;
+                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'; ').
+        (($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
+
+'var metaKeys  = document.getElementById(\'page_meta_keys\').value;
+var metaDescription = document.getElementById(\'page_meta_description\').value;' :
+'var metaKeys  = \'\';
+var metaDescription = \'\';').'
                   var kvpairs = [];
 var form = document.getElementById(\'impagemanager\');
 for ( var i = 0; i < form.elements.length; i++ ) {

@@ -430,6 +430,17 @@ class Page
         }
 
         // Page level blocks
+        $page = $this->context->getPagesHome($this->module).$this->pageName.'.local.yml';
+        if (!file_exists($page)) {
+            $page = $this->context->getPagesHome($this->module).$this->pageName.'.yml';
+        }
+
+        if (file_exists($page)) {
+            $def = yaml_parse_file($page);
+            $yaml['blocks'] = $def['blocks'];
+        }
+
+        /*
         foreach ($this->blocks as $row => $columns) {
             foreach ($columns as $column => $positions) {
                 if (is_array($positions)) {
@@ -446,6 +457,7 @@ class Page
                 }
             }
         }
+        */
 
         // Cell parameters
         if (is_array($this->cellParameters)) {
