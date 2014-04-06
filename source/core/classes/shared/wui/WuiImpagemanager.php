@@ -122,7 +122,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
                             if ($editorPage->getScope() == 'page') {
                                 if (isset($userBlocks[$row][$column])) {
+                                    $positions = count($userBlocks[$row][$column]);
                                     foreach ($userBlocks[$row][$column] as $position => $block) {
+                                        $xml .= '<horizgroup><args><width>0%</width></args><children>';
                                         $hasBlockManager = false;
                                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
                                         $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
@@ -147,6 +149,51 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                         if (!$hasBlockManager) {
                                             $xml .= '<label><args><label>'.WuiXml::cdata($blockName).'</label></args></label>';
                                         }
+
+                                        $xml .= '<vertgroup><children><button>
+                                            <args>
+                                              <horiz>true</horiz>
+                                              <frame>false</frame>
+                                              <themeimage>trash</themeimage>
+                                              <themeimagetype>mini</themeimagetype>
+                                              <action>javascript:void(0)</action>
+                                            </args>
+                                              <events>
+                                                <click>xajax_WuiImpagemanagerRemoveBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                              </events>
+                                          </button>';
+
+                                         if ($position > 1) {
+                                             $xml .= '<button>
+                                            <args>
+                                              <horiz>true</horiz>
+                                              <frame>false</frame>
+                                              <themeimage>arrowup</themeimage>
+                                              <themeimagetype>mini</themeimagetype>
+                                              <action>javascript:void(0)</action>
+                                            </args>
+                                              <events>
+                                                <click>xajax_WuiImpagemanagerRaiseBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                              </events>
+                                          </button>';
+                                         }
+
+                                         if ($position < $positions) {
+                                             $xml .= '<button>
+                                            <args>
+                                              <horiz>true</horiz>
+                                              <frame>false</frame>
+                                              <themeimage>arrowdown</themeimage>
+                                              <themeimagetype>mini</themeimagetype>
+                                              <action>javascript:void(0)</action>
+                                            </args>
+                                              <events>
+                                                <click>xajax_WuiImpagemanagerLowerBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                              </events>
+                                          </button>';
+                                        }
+
+                                        $xml .= '</children></vertgroup></children></horizgroup>';
                                     }
                                 }
                             }
@@ -294,10 +341,11 @@ var params = kvpairs.join(\'&\');
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $page,
+            $pageId
         );
         $editorPage->parsePage();
         $editorPage->moveBlock($row, $column, $position, 'raise');
@@ -314,10 +362,11 @@ var params = kvpairs.join(\'&\');
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $page,
+            $pageId
         );
         $editorPage->parsePage();
         $editorPage->moveBlock($row, $column, $position, 'lower');
@@ -334,10 +383,11 @@ var params = kvpairs.join(\'&\');
             return $objResponse;
         }
 
-        $editorPage = new \Innomedia\Layout\Editor\Page(
+        $editorPage = new \Innomedia\Cms\Page(
             DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
             $module,
-            $page
+            $page,
+            $pageId
         );
         $editorPage->parsePage();
         $editorPage->removeBlock($row, $column, $position);
