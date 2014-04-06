@@ -51,6 +51,11 @@ class Page
         }
     }
 
+    public function getScope()
+    {
+        return $this->scope;
+    }
+
     public function isChanged()
     {
         return $this->session->isValid('innomedia_page_manager_changed');
@@ -250,6 +255,9 @@ class Page
                 }
             }
 
+            // Retrieve content blocks definition
+            $instanceBlocks = array();
+
             // Stores page definition in the session
             $this->session->put('innomedia_page_manager_blocks',          $result);
             $this->session->put('innomedia_page_manager_instance_blocks', $instanceBlocks);
@@ -285,13 +293,100 @@ class Page
         $this->layout         = $layout;
     }
 
+    public function addBlock($module, $block, $row, $column, $position) {
+        $counter = 1;
+
+        // Find the biggest counter for this block type
+        $blocksList = array_merge($this->blocks, $this->userBlocks, $this->instanceBlocks);
+        foreach ($blocksList as $row => $columns) {
+            foreach ($columns as $column => $positions) {
+                foreach ($positions as $position => $blockArray) {
+                    if ($blockArray['module'] && $module && $blockArray['name'] == $block and $blockArray['counter'] >= $counter) {
+                        $counter = $blockArray['counter'] + 1;
+                    }
+                }
+            }
+        }
+
+        if ($this->scope == 'page') {
+            $this->userBlocks[$row][$column][$position] = array('module' => $module, 'name' => $block, 'counter' => $counter);
+            $this->session->put('innomedia_page_manager_user_blocks', $this->userBlocks);
+        } else {
+            $this->instanceBlocks[$row][$column][$position] = array('module' => $module, 'name' => $block, 'counter' => $counter);
+            $this->session->put('innomedia_page_manager_instance_blocks', $this->instanceBlocks);
+        }
+
+        $this->setChanged();
+    }
+
+    public function moveBlock($row, $column, $position, $direction) {
+        if ($this->scope == 'page') {
+            $blocks = &$this->userBlocks;
+        } else {
+            $blocks = &$this->instanceBlocks;
+        }
+
+        switch ($direction) {
+            case 'raise' :
+                if ($position == 1) {
+                    break;
+                }
+                $old_block = $blocks[$row][$column][$position];
+                $blocks[$row][$column][$position]    = $blocks[$row][$column][$position -1];
+                $blocks[$row][$column][$position -1] = $old_block;
+                break;
+            case 'lower' :
+                if ($position == count($blocks[$row][$column])) {
+                    break;
+                }
+                $old_block = $blocks[$row][$column][$position];
+                $blocks[$row][$column][$position]    = $blocks[$row][$column][$position +1];
+                $blocks[$row][$column][$position +1] = $old_block;
+                break;
+        }
+
+        if ($this->scope == 'page') {
+            $this->session->put('innomedia_page_manager_user_blocks', $this->userBlocks);
+        } else {
+            $this->session->put('innomedia_page_manager_instance_blocks', $this->instanceBlocks);
+        }
+
+        $this->setChanged();
+    }
+
+    public function removeBlock($row, $column, $position) {
+        if ($this->scope == 'page') {
+            $blocks = &$this->userBlocks;
+        } else {
+            $blocks = &$this->instanceBlocks;
+        }
+
+        if (count($blocks[$row][$column]) > $position) {
+            for ($i = $position; $i < count($blocks[$row][$column]); $i ++) {
+                $blocks[$row][$column][$i] = $blocks[$row][$column][$i +1];
+            }
+        }
+
+        unset($blocks[$row][$column][count($blocks[$row][$column])]);
+
+        if ($this->scope == 'page') {
+            $this->session->put('innomedia_page_manager_user_blocks', $this->userBlocks);
+        } else {
+            $this->session->put('innomedia_page_manager_instance_blocks', $this->instanceBlocks);
+        }
+
+        $this->setChanged();
+    }
+
     public function savePage($parameters) {
         if ($this->pageId != 0) {
             // Save page data
             $this->page->updateContent();
         }
 
-        foreach ($this->blocks as $row => $column) {
+        $blocksList = array_merge($this->blocks, $this->userBlocks, $this->instanceBlocks);
+
+        foreach ($blocksList as $row => $column) {
             foreach ($column as $position => $blocks) {
                 foreach ($blocks as $block) {
                     $hasBlockManager = false;

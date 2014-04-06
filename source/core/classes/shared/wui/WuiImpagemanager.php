@@ -85,7 +85,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
             for ($column = 1; $column <= $columns; $column++) {
                 if (isset($blocks[$row][$column])) {
-                    $positions = count($blocks[$row][$column]);
+                    //$positions = count($blocks[$row][$column]);
                     $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
@@ -118,8 +118,38 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     if (isset($cellParameters[$row][$column]['accepts']) && is_array($cellParameters[$row][$column]['accepts'])) {
                         $supportedBlocks = \Innomedia\Block::getBlocksByTypes($cellParameters[$row][$column]['accepts']);
                         if (count($supportedBlocks)) {
-                            $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
+                            $xml .= '<vertframe row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
 
+                            if ($editorPage->getScope() == 'page') {
+                                if (isset($userBlocks[$row][$column])) {
+                                    foreach ($userBlocks[$row][$column] as $position => $block) {
+                                        $hasBlockManager = false;
+                                        $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+                                        $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
+
+
+                                        $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
+                                        if (class_exists($fqcn)) {
+                                            if ($fqcn::hasBlockManager()) {
+                                                $hasBlockManager       = true;
+                                                $headers['0']['label'] = $blockName;
+                                                $managerClass          = $fqcn::getBlockManager();
+                                                if (class_exists($managerClass)) {
+                                                    $manager = new $managerClass($module.'/'.$page, $blockCounter, $pageId);
+                                                    $xml .= '<table><args><width>'.($column == 2 ? '700' : '250').'</width><headers type="array">'.
+                                                        WuiXml::encode($headers)
+                                                        .'</headers></args><children><vertgroup row="0" col="0"><args><width>'.($column == 2 ? '700' : '250').'</width></args><children>'.
+                                                        $manager->getManagerXml().'</children></vertgroup></children></table>';
+                                               }
+                                            }
+                                        }
+
+                                        if (!$hasBlockManager) {
+                                            $xml .= '<label><args><label>'.WuiXml::cdata($blockName).'</label></args></label>';
+                                        }
+                                    }
+                                }
+                            }
                             // Build the list of supported blocks
                             $supportedList = array();
                             foreach ($supportedBlocks as $supportedBlock) {
@@ -127,7 +157,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                 $supportedList[$supportedBlock] = $supportedModule.': '.$supportedBlock;
                             }
 
-                            $xml .= '<vertframe><children>';
                             $xml .= '<horizgroup><args><width>0%</width></args><children>';
                             $xml .= '<combobox><args><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
                             $xml .= '<button>
@@ -159,9 +188,8 @@ var params = kvpairs.join(\'&\');
   </button>
 ';
                             $xml .= '</children></horizgroup>';
-                            $xml .= '</children></vertframe>';
 
-                            $xml .= '</children></vertgroup>';
+                            $xml .= '</children></vertframe>';
                         }
                     }
                 }
@@ -255,6 +283,66 @@ var params = kvpairs.join(\'&\');
         $editorPage->parsePage();
 
         $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
+
+        return $objResponse;
+    }
+
+    public static function ajaxRaiseBlock($module, $page, $pageId, $row, $column, $position)
+    {
+        $objResponse = new XajaxResponse();
+        if (!(strlen($module) && strlen($page))) {
+            return $objResponse;
+        }
+
+        $editorPage = new \Innomedia\Layout\Editor\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $module,
+            $page
+        );
+        $editorPage->parsePage();
+        $editorPage->moveBlock($row, $column, $position, 'raise');
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
+
+        return $objResponse;
+    }
+
+    public static function ajaxLowerBlock($module, $page, $pageId, $row, $column, $position)
+    {
+        $objResponse = new XajaxResponse();
+        if (!(strlen($module) && strlen($page))) {
+            return $objResponse;
+        }
+
+        $editorPage = new \Innomedia\Layout\Editor\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $module,
+            $page
+        );
+        $editorPage->parsePage();
+        $editorPage->moveBlock($row, $column, $position, 'lower');
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
+
+        return $objResponse;
+    }
+
+    public static function ajaxRemoveBlock($module, $page, $pageId, $row, $column, $position)
+    {
+        $objResponse = new XajaxResponse();
+        if (!(strlen($module) && strlen($page))) {
+            return $objResponse;
+        }
+
+        $editorPage = new \Innomedia\Layout\Editor\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $module,
+            $page
+        );
+        $editorPage->parsePage();
+        $editorPage->removeBlock($row, $column, $position);
+
+        $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
 
         return $objResponse;
     }
