@@ -46,5 +46,11 @@
 
         <permission name="add_web_page" title="add_web_page" description="" catalog="innomedia-page-manager::roles" defaultroles="web_system_administrator" />
 
+        <shared name="dropzone.js" />
+        <shared name="dropzone.css" />
+        <shared name="spritemap.png" />
+        <shared name="spritemap@2x.png" />
+        <wuiwidget name="dropzone" file="WuiDropzone.php" />
+
 	</components>
 </application>

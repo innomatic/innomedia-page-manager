@@ -13,7 +13,10 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
     public function generateSource()
     {
-        $this->mLayout = '<div id="wui_impagemanager">'.$this->getHTML($this->mArgs['module'], $this->mArgs['page'], $this->mArgs['pageid']).'</div>';
+            $container = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer');
+            $dropzoneJs = '<script src="'.$container->getBaseUrl(false).'/shared/dropzone.js"></script>
+                <link href="'.$container->getBaseUrl(false).'/shared/dropzone.css" type="text/css" rel="stylesheet">';
+        $this->mLayout = $dropzoneJs.'<div id="wui_impagemanager">'.$this->getHTML($this->mArgs['module'], $this->mArgs['page'], $this->mArgs['pageid']).'</div>';
         return true;
     }
 
@@ -329,7 +332,9 @@ var params = kvpairs.join(\'&\');
         );
         $editorPage->parsePage();
 
+        $container = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer');
         $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $pageName, $pageId, false));
+        $objResponse->addIncludeScript($container->getBaseUrl(false).'/shared/dropzone.js');
 
         return $objResponse;
     }
