@@ -38,6 +38,7 @@
         <domaingroup name="web" catalog="innomedia-page-manager::panels" />
 		<domainpanel name="impagemanager" category="web" catalog="innomedia-page-manager::panels" />
         <class name="innomedia/cms/Page.php" />
+        <class name="innomedia/dropzone/WebAppHandler.php" />
 		<catalog name="innomedia-page-manager" />
 
         <wuiwidget name="impagemanager" file="WuiImpagemanager.php" />
@@ -51,6 +52,10 @@
         <shared name="spritemap.png" />
         <shared name="spritemap@2x.png" />
         <wuiwidget name="dropzone" file="WuiDropzone.php" />
+        <tempdir name="dropzone" />
+		<webapphandler name="dropzone"
+            class="innomedia/dropzone/WebAppHandler.php"
+			urlpattern="/dropzone/*" listings="false" />
 
 	</components>
 </application>
