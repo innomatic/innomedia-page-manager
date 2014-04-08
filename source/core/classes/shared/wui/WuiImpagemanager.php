@@ -90,7 +90,18 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             for ($column = 1; $column <= $columns; $column++) {
                 if (isset($blocks[$row][$column])) {
                     //$positions = count($blocks[$row][$column]);
-                    $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top"><children>';
+
+                    $colspan = '1';
+                    if (isset($cellParameters[$row][$column]['colspan'])) {
+                        $colspan = $cellParameters[$row][$column]['colspan'];
+                    }
+
+                    $rowspan = '1';
+                    if (isset($cellParameters[$row][$column]['rowspan'])) {
+                        $rowspan = $cellParameters[$row][$column]['rowspan'];
+                    }
+
+                    $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top" colspan="'.$colspan.'" rowspan="'.$rowspan.'"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
                         $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
@@ -176,85 +187,87 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                          if ($position > 1) {
                                              $xml .= '<button>
                                             <args>
-                                              <horiz>true</horiz>
-                                              <frame>false</frame>
-                                              <themeimage>arrowup</themeimage>
-                                              <themeimagetype>mini</themeimagetype>
-                                              <action>javascript:void(0)</action>
-                                            </args>
-                                              <events>
-                                                <click>xajax_WuiImpagemanagerRaiseBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
-                                              </events>
-                                          </button>';
-                                         }
+                                          <horiz>true</horiz>
+                                          <frame>false</frame>
+                                          <themeimage>arrowup</themeimage>
+                                          <themeimagetype>mini</themeimagetype>
+                                          <action>javascript:void(0)</action>
+                                        </args>
+                                          <events>
+                                            <click>xajax_WuiImpagemanagerRaiseBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                          </events>
+                                      </button>';
+                                     }
 
-                                         if ($position < $positions) {
-                                             $xml .= '<button>
-                                            <args>
-                                              <horiz>true</horiz>
-                                              <frame>false</frame>
-                                              <themeimage>arrowdown</themeimage>
-                                              <themeimagetype>mini</themeimagetype>
-                                              <action>javascript:void(0)</action>
-                                            </args>
-                                              <events>
-                                                <click>xajax_WuiImpagemanagerLowerBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
-                                              </events>
-                                          </button>';
-                                        }
-
-                                        $xml .= '</children></vertgroup></children></horizgroup>';
+                                     if ($position < $positions) {
+                                         $xml .= '<button>
+                                        <args>
+                                          <horiz>true</horiz>
+                                          <frame>false</frame>
+                                          <themeimage>arrowdown</themeimage>
+                                          <themeimagetype>mini</themeimagetype>
+                                          <action>javascript:void(0)</action>
+                                        </args>
+                                          <events>
+                                            <click>xajax_WuiImpagemanagerLowerBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                          </events>
+                                      </button>';
                                     }
+
+                                    $xml .= '</children></vertgroup></children></horizgroup>';
                                 }
                             }
-                            // Build the list of supported blocks
-                            $supportedList = array();
-                            foreach ($supportedBlocks as $supportedBlock) {
-                                list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
-                                $supportedList[$supportedModule.'/'.$supportedBlock] = $supportedModule.': '.$supportedBlock;
-                            }
-
-                            $xml .= '<horizgroup><args><width>0%</width></args><children>';
-                            $xml .= '<combobox><args><id>addblockname</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
-                            $xml .= '<button>
-    <args>
-      <horiz>true</horiz>
-      <frame>false</frame>
-      <themeimage>mathadd</themeimage>
-      <action>javascript:void(0)</action>
-    </args>
-    			  <events>
-                  <click>'.WuiXml::cdata('
-              var page = document.getElementById(\'addblockname\');
-              var pagevalue = page.options[page.selectedIndex].value;
-              var elements = pagevalue.split(\'/\');
-    			    xajax_WuiImpagemanagerAddBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', elements[0], elements[1], \''.$row.'\', \''.$column.'\', \''.($position+1).'\');
-                    ').'</click>
-    			  </events>
-  </button>
-';
-                            $xml .= '</children></horizgroup>';
-
-                            $xml .= '</children></vertframe>';
                         }
+                        // Build the list of supported blocks
+                        $supportedList = array();
+                        foreach ($supportedBlocks as $supportedBlock) {
+                            list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
+                            $supportedList[$supportedModule.'/'.$supportedBlock] = $supportedModule.': '.$supportedBlock;
+                        }
+
+                        $xml .= '<horizgroup><args><width>0%</width></args><children>';
+                        $xml .= '<label><args><label>'.WuiXml::cdata($localeCatalog->getStr('add_block_label')).'</label></args></label>';
+                        $xml .= '<combobox><args><id>addblockname</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
+                        $xml .= '<button>
+<args>
+  <horiz>true</horiz>
+  <frame>false</frame>
+  <themeimage>mathadd</themeimage>
+  <themeimagetype>mini</themeimagetype>
+  <action>javascript:void(0)</action>
+</args>
+              <events>
+              <click>'.WuiXml::cdata('
+          var page = document.getElementById(\'addblockname\');
+          var pagevalue = page.options[page.selectedIndex].value;
+          var elements = pagevalue.split(\'/\');
+                xajax_WuiImpagemanagerAddBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', elements[0], elements[1], \''.$row.'\', \''.$column.'\', \''.($position+1).'\');
+                ').'</click>
+              </events>
+</button>
+';
+                        $xml .= '</children></horizgroup>';
+
+                        $xml .= '</children></vertframe>';
                     }
                 }
             }
         }
+    }
 
-        $xml .= '</children></grid>
-            </children></form>
-            <horizbar/>
+    $xml .= '</children></grid>
+        </children></form>
+        <horizbar/>
 
-            <horizgroup><args><width>0%</width></args><children>
-            ';
+        <horizgroup><args><width>0%</width></args><children>
+        ';
 
-            $xml .= '  <button>
-    <args>
-      <horiz>true</horiz>
-      <frame>false</frame>
-      <themeimage>buttonok</themeimage>
-      <label>'.$localeCatalog->getStr('save_button').'</label>
+        $xml .= '  <button>
+<args>
+  <horiz>true</horiz>
+  <frame>false</frame>
+  <themeimage>buttonok</themeimage>
+  <label>'.$localeCatalog->getStr('save_button').'</label>
       <action>javascript:void(0)</action>
     </args>
     			  <events>
