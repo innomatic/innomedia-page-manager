@@ -51,20 +51,22 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         if ($editorPage->getPageId() != 0) {
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
-                <label row="'.$gridRow++.'" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
+                <label row="'.$gridRow.'" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
+                <label row="'.$gridRow.'" col="2" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_address_label')).'</label></args></label>
+                <link row="'.$gridRow++.'" col="3"><args><target>_blank</target><label>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</label><link>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</link></args></link>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
               ';
         }
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_description_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_description</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_description']).'</value><size>80</size></args></string>
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_meta_description</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_description']).'</value><size>80</size></args></string>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_meta_keys_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1"><args><id>page_meta_keys</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_keys']).'</value><size>80</size></args></string>';
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_meta_keys</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['meta_keys']).'</value><size>80</size></args></string>';
         }
 
         $xml .= '     </children></grid>

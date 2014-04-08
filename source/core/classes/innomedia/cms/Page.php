@@ -436,6 +436,7 @@ class Page
                             if (class_exists($managerClass)) {
                                 $manager = new $managerClass($this->module.'/'.$this->pageName, $blockCounter, $this->pageId);
                                 $manager->saveBlock($parameters[$block['module']][$block['name']][$blockCounter]);
+                                $manager->cleanUploadedFiles();
                             }
                         }
                     }
