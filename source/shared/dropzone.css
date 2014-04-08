@@ -147,7 +147,6 @@
   color: #800;
   min-width: 140px;
   max-width: 500px;
-  z-index: 500;
 }
 .dropzone .dz-preview:hover.dz-error .dz-error-message,
 .dropzone-previews .dz-preview:hover.dz-error .dz-error-message {
