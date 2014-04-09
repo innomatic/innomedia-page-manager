@@ -190,6 +190,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               <children><void/>
               </children>
             </divframe>
+            <impagemanager>
+              </impagemanager>
             </children></vertgroup>';
     }
 

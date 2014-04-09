@@ -29,7 +29,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $id           = isset($this->mArgs['id']) ? $this->mArgs['id'] : $this->mName;
         $pageModule   = $this->mArgs['pagemodule'];
         $pageName     = $this->mArgs['pagename'];
-        $pageId       = $this->mArgs['pageid'];
+        $pageId       = strlen($this->mArgs['pageid']) ? $this->mArgs['pageid'] : '0';
         $blockModule  = $this->mArgs['blockmodule'];
         $blockName    = $this->mArgs['blockname'];
         $blockCounter = $this->mArgs['blockcounter'];
