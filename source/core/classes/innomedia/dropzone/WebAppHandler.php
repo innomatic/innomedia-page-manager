@@ -59,6 +59,10 @@ class WebAppHandler extends \Innomatic\Webapp\WebAppHandler
         $blockCounter = isset($location[6]) ? $location[6] : 1;
         $fileId       = isset($location[7]) ? $location[7] : 1;
 
+        if (!strlen($pageId)) {
+            $pageId = '0';
+        }
+
         $error = false;
 
         // Check if the page is valid
