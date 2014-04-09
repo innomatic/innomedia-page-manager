@@ -35,6 +35,12 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $blockCounter = $this->mArgs['blockcounter'];
         $fileId       = $this->mArgs['fileid'];
 
+        // Handle case of image in site wide parameters
+        if (!(strlen($pageModule) && strlen($pageName))) {
+            $pageModule = 'site';
+            $pageName   = 'global';
+        }
+
         $fileParameters = $pageModule.'/'.$pageName.'/'.$pageId.'/'.$blockModule.'/'.$blockName.'/'.$blockCounter.'/'.$fileId;
 
         $this->mLayout = ($this->mComments ? '<!-- begin ' . $this->mName . ' dropzone -->' : '') .

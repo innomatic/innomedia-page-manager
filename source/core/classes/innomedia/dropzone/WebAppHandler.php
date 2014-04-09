@@ -59,6 +59,13 @@ class WebAppHandler extends \Innomatic\Webapp\WebAppHandler
         $blockCounter = isset($location[6]) ? $location[6] : 1;
         $fileId       = isset($location[7]) ? $location[7] : 1;
 
+        // Handle case of image in site wide parameters
+        if (!(strlen($pageModule) && strlen($pageName))) {
+            $pageModule = 'site';
+            $pageName   = 'global';
+        }
+
+        // Handle case of not content page
         if (!strlen($pageId)) {
             $pageId = '0';
         }
