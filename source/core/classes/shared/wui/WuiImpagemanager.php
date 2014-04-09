@@ -226,7 +226,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         $supportedList = array();
                         foreach ($supportedBlocks as $supportedBlock) {
                             list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
-                            $supportedList[$supportedModule.'/'.$supportedBlock] = $supportedModule.': '.$supportedBlock;
+                            $supportedList[$supportedModule.'/'.$supportedBlock] = ucfirst($supportedModule).': '.ucfirst($supportedBlock);
                         }
 
                         $xml .= '<horizgroup><args><width>0%</width></args><children>';
