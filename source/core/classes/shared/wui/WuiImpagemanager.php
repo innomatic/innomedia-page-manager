@@ -452,10 +452,10 @@ var params = kvpairs.join(\'&\');
             $pageId
         );
         $editorPage->parsePage();
-        $editorPage->getPage()->setName($pageName);
-        $editorPage->getPage()->setUrlKeywords($urlKeywords);
-        $editorPage->getPage()->setParameter('meta_description', $metaDescription);
-        $editorPage->getPage()->setParameter('meta_keys', $metaKeys);
+        $editorPage->getPage()->setName($pageName)
+            ->setUrlKeywords($urlKeywords)
+            ->setParameter('meta_description', $metaDescription)
+            ->setParameter('meta_keys', $metaKeys);
 
         $decodedParams = array();
         foreach (explode('&', $parameters) as $chunk) {
