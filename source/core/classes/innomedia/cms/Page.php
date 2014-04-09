@@ -416,6 +416,9 @@ class Page
         if ($this->pageId != 0) {
             // Save page data
             $this->page->updateContent();
+        } else {
+            // Save page parameters for pages with no content
+            $this->page->savePageLevelParameters();
         }
 
         $blocksList = array_merge($this->blocks, $this->userBlocks, $this->instanceBlocks);
