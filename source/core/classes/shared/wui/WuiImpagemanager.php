@@ -44,6 +44,8 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
               <args><id>impagemanager</id></args>
               <children>
 
+                <formarg><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value></args></formarg>
+
               <grid><children>';
 
         $gridRow = 0;
@@ -56,9 +58,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                 <link row="'.$gridRow++.'" col="3"><args><target>_blank</target><label>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</label><link>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</link></args></link>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
+              ';
+
+            /*
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
-              ';
+            */
         }
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
@@ -229,9 +234,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                             $supportedList[$supportedModule.'/'.$supportedBlock] = ucfirst($supportedModule).': '.ucfirst($supportedBlock);
                         }
 
+                        $addBlockName = 'addblockname'.rand();
+
                         $xml .= '<horizgroup><args><width>0%</width></args><children>';
                         $xml .= '<label><args><label>'.WuiXml::cdata($localeCatalog->getStr('add_block_label')).'</label></args></label>';
-                        $xml .= '<combobox><args><id>addblockname</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
+                        $xml .= '<combobox><args><id>'.$addBlockName.'</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
                         $xml .= '<button>
 <args>
   <horiz>true</horiz>
@@ -242,7 +249,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 </args>
               <events>
               <click>'.WuiXml::cdata('
-          var page = document.getElementById(\'addblockname\');
+          var page = document.getElementById(\''.$addBlockName.'\');
           var pagevalue = page.options[page.selectedIndex].value;
           var elements = pagevalue.split(\'/\');
                 xajax_WuiImpagemanagerAddBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', elements[0], elements[1], \''.$row.'\', \''.$column.'\', \''.($position+1).'\');
