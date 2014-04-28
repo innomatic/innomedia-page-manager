@@ -301,6 +301,10 @@ for ( var i = 0; i < form.elements.length; i++ ) {
         if (e.checked) {
             kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
         }
+    } else if (e.type == \'radio\') {
+        if (e.checked) {
+            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+        }
     } else {
         kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
     }
