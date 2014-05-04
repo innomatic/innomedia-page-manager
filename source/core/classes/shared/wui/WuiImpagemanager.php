@@ -64,7 +64,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             /*
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
-            */
+             */
         }
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
@@ -127,7 +127,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                 $managerClass          = $fqcn::getBlockManager();
                                 if (class_exists($managerClass)) {
                                     $manager = new $managerClass($module.'/'.$page, $blockCounter, $pageId);
-                                    $xml .= '<table><args><width>'.($column == 2 ? '700' : '250').'</width><headers type="array">'.
+                                    $xml .= '<table><args><width>'.($colspan == 1 ? ($column == 2 ? '700' : '250') : '100%').'</width><headers type="array">'.
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><args><width>'.($column == 2 ? '700' : '250').'</width></args><children>'.
                                         $manager->getManagerXml().'</children></vertgroup></children></table>';
