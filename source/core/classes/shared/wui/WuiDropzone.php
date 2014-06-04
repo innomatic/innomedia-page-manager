@@ -79,13 +79,19 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
 
         $count = 0; 
         while (!$objectQuery->eof) {
-            $mediaid      = $objectQuery->getFields('id');
-            $name         = $objectQuery->getFields('name');
-            $path         = $objectQuery->getFields('path');
-            $size         = "12345";
+            $mediaid   = $objectQuery->getFields('id');
+            $name      = $objectQuery->getFields('name');
+            $path      = $objectQuery->getFields('path');
+            $size      = "12345";
+            
+            $webappurl = $container->getCurrentDomain()->domaindata['webappurl'];
+            $last_char = substr($webappurl, -1);  
+            $separetor = $last_char == '/' ? '' : '/';
+            $pathfull  = $webappurl.$separetor.'storage/images/'.$path;
+
             $this->mLayout .='var mockFile = { name: "'.$name.'", size: "'.$size.'", mediaid: "'.$mediaid.'"};
                 dropzone.options.addedfile.call(dropzone, mockFile);
-                dropzone.options.thumbnail.call(dropzone, mockFile, "'.$container->getCurrentDomain()->domaindata['webappurl'].'storage/images/'.$path.'");';
+                dropzone.options.thumbnail.call(dropzone, mockFile, "'.$pathfull.'");';
             $objectQuery->moveNext();
             $count++;
         }
