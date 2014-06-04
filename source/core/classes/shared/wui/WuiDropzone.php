@@ -34,6 +34,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $blockName    = $this->mArgs['blockname'];
         $blockCounter = $this->mArgs['blockcounter'];
         $fileId       = $this->mArgs['fileid'];
+        $maxFiles     = $this->mArgs['maxfiles'];
 
         // Handle case of image in site wide parameters
         if (!(strlen($pageModule) && strlen($pageName))) {
@@ -43,24 +44,143 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
 
         $fileParameters = $pageModule.'/'.$pageName.'/'.$pageId.'/'.$blockModule.'/'.$blockName.'/'.$blockCounter.'/'.$fileId;
 
+        // Start Add thumbnail
+        $page = $pageModule.'/'.$pageName;
+        $block = $blockModule.'/'.$blockName;
+
+        $containerDropzoneId = "container_$id";
         $this->mLayout = ($this->mComments ? '<!-- begin ' . $this->mName . ' dropzone -->' : '') .
-        $this->mLayout .= $dropzoneJs.'
+        $this->mLayout .= $dropzoneJs.'<div id="'.$containerDropzoneId.'">
 <div id="'.$id.'"></div>
 <script>
 var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).'/dropzone/'.$fileParameters.'"';
 
-        if (isset($this->mArgs['maxfiles'])) {
-            $this->mLayout .= ', maxFiles: '.$this->mArgs['maxfiles'];
+        if (isset($maxFiles)) {
+            $this->mLayout .= ', maxFiles: '.$maxFiles;
         }
 
-        $this->mLayout .= '});';
+        $this->mLayout .= ', addRemoveLinks: true, 
+            removedfile: function(file) {
+                var mediaId = file.mediaid;
+                var mediaName = file.name;       
+
+                if (mediaId != null) {
+                    xajax_WuiDropzoneRemoveMedia(\''.$containerDropzoneId.'\', \''.$page.'\', \''.$pageId.'\', \''.$block.'\', \''.$blockCounter.'\', \''.$fileId.'\', \''.$maxFiles.'\', mediaId, mediaName);
+
+                } else {
+
+                    var _ref;
+                    return (_ref = file.previewElement) != null ? _ref.parentNode.removeChild(file.previewElement) : void 0;
+                }
+            }
+        });';
+
+        $objectQuery = \Innomedia\Media::getMediaByParams($this->mArgs);
+
+        $count = 0; 
+        while (!$objectQuery->eof) {
+            $mediaid      = $objectQuery->getFields('id');
+            $name         = $objectQuery->getFields('name');
+            $path         = $objectQuery->getFields('path');
+            $size         = "12345";
+            $this->mLayout .='var mockFile = { name: "'.$name.'", size: "'.$size.'", mediaid: "'.$mediaid.'"};
+                dropzone.options.addedfile.call(dropzone, mockFile);
+                dropzone.options.thumbnail.call(dropzone, mockFile, "'.$container->getCurrentDomain()->domaindata['webappurl'].'storage/images/'.$path.'");';
+            $objectQuery->moveNext();
+            $count++;
+        }
+        // End Add thumbnail
 
 $this->mLayout .=
 'document.querySelector("#'.$id.'").classList.add("dropzone");
-</script>';
+var existingFileCount = '.$count.'; // The number of files already uploaded
+dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
+</script>
+</div>';
 
         $this->mLayout .= $this->mComments ? '<!-- end ' . $this->mName . " dropzone -->\n" : '';
 
         return true;
+    }
+
+    /**
+     * Remove image selected
+     * @param  string  $containerDropzoneId id of div container of the dropzone
+     * @param  string  $page                name of page
+     * @param  integer $pageId              id of page
+     * @param  string  $block               name of block
+     * @param  integer $blockCounter        if of block
+     * @param  string  $fileId              type of media
+     * @param  integer $maxFiles            number max of image for gallery
+     * @param  integer $mediaId             id of media
+     * @param  string  $mediaName           name of media
+     * @return object                       return a object
+     */
+    public static function ajaxRemoveMedia($containerDropzoneId, $page, $pageId, $block, $blockCounter, $fileId, $maxFiles, $mediaId, $mediaName)
+    {
+
+        // Delete image from Innomedia_media
+        $image = new \Innomedia\Media($mediaId);
+        $image->retrieve();
+        $image->delete();
+
+        // Delete ref image from innomedia_blocks
+        $domainDa = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
+            ->getCurrentDomain()
+            ->getDataAccess();
+
+        $checkQuery = $domainDa->execute(
+            "SELECT     id, params
+                FROM    innomedia_blocks
+                WHERE   block = '$block'
+                    AND counter = $blockCounter
+                    AND page = '$page'
+                    AND pageid = $pageId"
+        );
+
+        if ($checkQuery->getNumberRows() > 0) {
+            $row_id = $checkQuery->getFields('id');
+            $json_params = $checkQuery->getFields('params');
+
+            $params = json_decode($json_params, true);
+            
+            $key = array_search($mediaId, $params['images_id']);
+
+            // remove id image selected
+            unset($params['images_id'][$key]); 
+
+            // convet array in a not-associative array
+            $params['images_id'] = array_values($params['images_id']);
+            
+            $domainDa->execute(
+                "UPDATE innomedia_blocks
+                SET params=".$domainDa->formatText(json_encode($params)).
+                " WHERE id=$row_id"
+            );
+        
+        }
+                
+        // Update widget Dropzone
+        $objResponse = new XajaxResponse();
+
+        list($pageModule, $pageName) = explode("/", $page);
+        list($blockModule, $blockName) = explode("/", $block);
+
+        $xml = '<dropzone><args>
+                  <maxfiles>'.$maxFiles.'</maxfiles>
+                  <pagemodule>'.$pageModule.'</pagemodule>
+                  <pagename>'.$pageName.'</pagename>
+                  <pageid>'.$pageId.'</pageid>
+                  <blockmodule>'.$blockModule.'</blockmodule>
+                  <blockname>'.$blockName.'</blockname>
+                  <blockcounter>'.$blockCounter.'</blockcounter>
+                  <fileid>'.$fileId.'</fileid>
+                </args></dropzone>';
+
+        $html = WuiXml::getContentFromXml('', $xml);
+        
+        $objResponse->addAssign($containerDropzoneId, "innerHTML", $html);
+
+        return $objResponse;
     }
 }
