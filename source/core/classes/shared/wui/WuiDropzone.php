@@ -141,7 +141,7 @@ dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
                 WHERE   block = '$block'
                     AND counter = $blockCounter
                     AND page = '$page'
-                    AND pageid = $pageId"
+                    AND pageid ".($pageId != 0 ? "= {$pageId}" : "is NULL")
         );
 
         if ($checkQuery->getNumberRows() > 0) {
