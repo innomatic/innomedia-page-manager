@@ -497,6 +497,27 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
         }
         $editorPage->savePage($decodedParams);
 
+        $sScript = "
+          function refreshSelectImpagemanagerPanel()
+          {
+              promise = refreshSelectFirst().then(refreshSelectSecond);
+          }
+          function refreshSelectFirst()
+          {
+              d = new $.Deferred();
+              setTimeout('$(\"select#page\").val(\"$module/$page\").trigger(\"change\");d.resolve()',0);
+              return d.promise()
+          }
+          function refreshSelectSecond()
+          {
+              d = new $.Deferred();
+              setTimeout('$(\"[id=pageid] option\").filter(function(){return($(this).val() == \"$pageId\");}).prop(\"selected\", true);d.resolve()',3000);
+              return d.promise()
+          }
+           refreshSelectImpagemanagerPanel();
+        ";
+        $objResponse->addScript($sScript);
+
         $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
 
         return $objResponse;
@@ -539,6 +560,9 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
         $editorPage->parsePage();
         $editorPage->deletePage();
 
+        $sScript = "$('select#page').val('$module/$page').trigger('change');";
+        $objResponse->addScript($sScript);
+        
         $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;
