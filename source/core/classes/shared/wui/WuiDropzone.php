@@ -82,16 +82,25 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
             $mediaid   = $objectQuery->getFields('id');
             $name      = $objectQuery->getFields('name');
             $path      = $objectQuery->getFields('path');
-            $size      = "12345";
             
             $webappurl = $container->getCurrentDomain()->domaindata['webappurl'];
             $last_char = substr($webappurl, -1);  
             $separetor = $last_char == '/' ? '' : '/';
-            $pathfull  = $webappurl.$separetor.'storage/images/'.$path;
+
+            $filetype  = $objectQuery->getFields('filetype'); 
+            $typepath  = \Innomedia\Media::getTypePath($filetype);
+
+            $pathfull  = $webappurl.$separetor.'/storage/'.$typepath.'/'.$path;
+
+            $size = filesize(
+                $_SERVER['DOCUMENT_ROOT'].'/'
+                .$container->getCurrentDomain()->domaindata['domainid']
+                .'/storage/'.$typepath.'/'.$path
+            );
 
             $this->mLayout .='var mockFile = { name: "'.$name.'", size: "'.$size.'", mediaid: "'.$mediaid.'"};
-                dropzone.options.addedfile.call(dropzone, mockFile);
-                dropzone.options.thumbnail.call(dropzone, mockFile, "'.$pathfull.'");';
+                dropzone.options.addedfile.call(dropzone, mockFile);'
+                .($filetype != 'file' ? 'dropzone.options.thumbnail.call(dropzone, mockFile, "'.$pathfull.'");' : '');
             $objectQuery->moveNext();
             $count++;
         }
