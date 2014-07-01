@@ -93,7 +93,7 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
             $pathfull  = $webappurl.$separetor.'/storage/'.$typepath.'/'.$path;
 
             $size = filesize(
-                $_SERVER['DOCUMENT_ROOT'].'/'
+                $container->getHome().'/../'
                 .$container->getCurrentDomain()->domaindata['domainid']
                 .'/storage/'.$typepath.'/'.$path
             );
@@ -159,13 +159,13 @@ dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
 
             $params = json_decode($json_params, true);
             
-            $key = array_search($mediaId, $params['images_id']);
+            $key = @array_search($mediaId, $params[$fileId.'_id']);
 
             // remove id image selected
-            unset($params['images_id'][$key]); 
+            unset($params[$fileId.'_id'][$key]); 
 
             // convet array in a not-associative array
-            $params['images_id'] = array_values($params['images_id']);
+            $params[$fileId.'_id'] = @array_values($params[$fileId.'_id']);
             
             $domainDa->execute(
                 "UPDATE innomedia_blocks
