@@ -254,6 +254,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>buttonok</themeimage>
+      <mainaction>true</mainaction>
       <label>'.$this->localeCatalog->getStr('save_button').'</label>
       <action>javascript:void(0)</action>
     </args>

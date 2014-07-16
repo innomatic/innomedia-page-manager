@@ -280,6 +280,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
   <horiz>true</horiz>
   <frame>false</frame>
   <themeimage>buttonok</themeimage>
+  <mainaction>true</mainaction>
   <label>'.$localeCatalog->getStr('save_button').'</label>
       <action>javascript:void(0)</action>
     </args>
@@ -562,7 +563,7 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
 
         $sScript = "$('select#page').val('$module/$page').trigger('change');";
         $objResponse->addScript($sScript);
-        
+
         $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;
