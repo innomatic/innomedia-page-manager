@@ -334,6 +334,7 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>trash</themeimage>
+      <dangeraction>true</dangeraction>
       <label>'.$localeCatalog->getStr('delete_button').'</label>
       <action>javascript:void(0)</action>
     </args>
