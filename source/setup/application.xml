@@ -5,7 +5,7 @@
 		<idname>innomedia-page-manager</idname>
 		<release>
 			<version>1.0.0</version>
-            <date>2014/03/09</date>
+            <date>2014/07/21</date>
 			<changesfile>CHANGES</changesfile>
 		</release>
 		<description>InnoMedia Page Manager</description>
@@ -16,7 +16,7 @@
 		<legal>
 			<author>
 				<name>Innoteam Srl</name>
-				<email>info@innoteam.io</email>
+				<email>info@innomatic.io</email>
 				<web>http://www.innomatic.io/</web>
 			</author>
 			<copyright>Copyright (C) 2014 Innoteam Srl</copyright>
