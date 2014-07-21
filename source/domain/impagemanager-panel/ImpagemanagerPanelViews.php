@@ -129,6 +129,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               </events>
             </combobox>
             <divframe><args><id>content_list</id></args><children><void /></children></divframe>
+            <divframe><args><id>lang_list</id></args><children><void /></children></divframe>
             <!--
             <formarg><args><id>pageid</id><value>'.$pageId.'</value></args></formarg>
             -->
@@ -254,7 +255,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>buttonok</themeimage>
-      <mainaction>true</mainaction>
       <label>'.$this->localeCatalog->getStr('save_button').'</label>
       <action>javascript:void(0)</action>
     </args>
