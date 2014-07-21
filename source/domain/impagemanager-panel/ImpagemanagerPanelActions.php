@@ -103,8 +103,7 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     public static function ajaxLoadContentLang($module, $page, $pageid)
     {
 
-        // @TODO: read dinamically
-        $languages = array('it' => 'Italiano', 'eng' => 'English');
+        $languages = \Innomedia\Locale\LocaleWebApp::getListLanguageAvailable();
 
         $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
             'innomedia-page-manager::pagemanager_panel',
