@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<application>
+
+	<definition>
+		<idname>innomedia-page-manager</idname>
+		<release>
+			<version>1.0.0</version>
+            <date>2014/07/21</date>
+			<changesfile>CHANGES</changesfile>
+		</release>
+		<description>InnoMedia Page Manager</description>
+		<category>web</category>
+		<dependencies>
+			<dependency>innomedia[1.2.0]</dependency>
+		</dependencies>
+		<legal>
+			<author>
+				<name>Innoteam Srl</name>
+				<email>info@innomatic.io</email>
+				<web>http://www.innomatic.io/</web>
+			</author>
+			<copyright>Copyright (C) 2014 Innoteam Srl</copyright>
+			<license>New BSD</license>
+			<licensefile>LICENSE</licensefile>
+		</legal>
+		<support>
+			<supportemail>helpdesk@innomatic.io</supportemail>
+			<bugsemail>bugs@innomatic.io</bugsemail>
+			<maintainer>
+				<name>Alex Pagnoni</name>
+				<email>alex.pagnoni@innomatic.io</email>
+			</maintainer>
+		</support>
+	</definition>
+
+	<components>
+
+        <domaingroup name="web" catalog="innomedia-page-manager::panels" />
+		<domainpanel name="impagemanager" category="web" catalog="innomedia-page-manager::panels" />
+        <class name="innomedia/cms/Page.php" />
+        <class name="innomedia/dropzone/WebAppHandler.php" />
+		<catalog name="innomedia-page-manager" />
+
+        <wuiwidget name="impagemanager" file="WuiImpagemanager.php" />
+
+        <permission name="add_web_content" title="add_web_content" description="" catalog="innomedia-page-manager::roles" defaultroles="web_system_administrator,web_editor" />
+
+        <permission name="add_web_page" title="add_web_page" description="" catalog="innomedia-page-manager::roles" defaultroles="web_system_administrator" />
+
+        <shared name="dropzone.js" />
+        <shared name="dropzone.css" />
+        <shared name="spritemap.png" />
+        <shared name="spritemap@2x.png" />
+        <wuiwidget name="dropzone" file="WuiDropzone.php" />
+        <tempdir name="dropzone" />
+		<webapphandler name="dropzone"
+            class="innomedia/dropzone/WebAppHandler.php"
+			urlpattern="/dropzone/*" listings="false" />
+
+	</components>
+</application>
