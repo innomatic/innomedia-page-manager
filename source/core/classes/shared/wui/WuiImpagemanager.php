@@ -39,11 +39,16 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             $pageId
         );
 
+        $keyCurrentLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage('backend');
+        $languages = \Innomedia\Locale\LocaleWebApp::getListLanguagesAvailable();
+        $currentLanguage = $languages[$keyCurrentLanguage];
+
         $xml = '<vertgroup><children>
             <form><name>impagemanager</name>
               <args><id>impagemanager</id></args>
               <children>
-
+                <label halign="right"><args><bold>true</bold><label>Lingua che si sta editando: '.WuiXml::cdata($currentLanguage).'</label></args></label>
+                <horizbar/>
                 <formarg><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value></args></formarg>
 
               <grid><children>';
@@ -280,7 +285,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
   <horiz>true</horiz>
   <frame>false</frame>
   <themeimage>buttonok</themeimage>
-  <mainaction>true</mainaction>
   <label>'.$localeCatalog->getStr('save_button').'</label>
       <action>javascript:void(0)</action>
     </args>
@@ -334,7 +338,6 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
       <horiz>true</horiz>
       <frame>false</frame>
       <themeimage>trash</themeimage>
-      <dangeraction>true</dangeraction>
       <label>'.$localeCatalog->getStr('delete_button').'</label>
       <action>javascript:void(0)</action>
     </args>
@@ -564,7 +567,7 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
 
         $sScript = "$('select#page').val('$module/$page').trigger('change');";
         $objResponse->addScript($sScript);
-
+        
         $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;

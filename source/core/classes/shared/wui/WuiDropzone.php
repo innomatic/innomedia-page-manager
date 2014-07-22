@@ -35,6 +35,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $blockCounter = $this->mArgs['blockcounter'];
         $fileId       = $this->mArgs['fileid'];
         $maxFiles     = $this->mArgs['maxfiles'];
+        $fieldName    = isset($this->mArgs['fieldname']) ? $this->mArgs['fieldname'] : '';
 
         // Handle case of image in site wide parameters
         if (!(strlen($pageModule) && strlen($pageName))) {
@@ -75,19 +76,19 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
             }
         });';
 
-        $objectQuery = \Innomedia\Media::getMediaByParams($this->mArgs);
+        $list_media = \Innomedia\Media::getMediaByParams($this->mArgs);
 
         $count = 0; 
-        while (!$objectQuery->eof) {
-            $mediaid   = $objectQuery->getFields('id');
-            $name      = $objectQuery->getFields('name');
-            $path      = $objectQuery->getFields('path');
+        foreach ($list_media as $key => $media) {
+            $mediaid   = $media['id'];
+            $name      = $media['name'];
+            $path      = $media['path'];
             
             $webappurl = $container->getCurrentDomain()->domaindata['webappurl'];
             $last_char = substr($webappurl, -1);  
             $separetor = $last_char == '/' ? '' : '/';
 
-            $filetype  = $objectQuery->getFields('filetype'); 
+            $filetype  = $media['filetype']; 
             $typepath  = \Innomedia\Media::getTypePath($filetype);
 
             $pathfull  = $webappurl.$separetor.'/storage/'.$typepath.'/'.$path;
@@ -101,7 +102,7 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
             $this->mLayout .='var mockFile = { name: "'.$name.'", size: "'.$size.'", mediaid: "'.$mediaid.'"};
                 dropzone.options.addedfile.call(dropzone, mockFile);'
                 .($filetype != 'file' ? 'dropzone.options.thumbnail.call(dropzone, mockFile, "'.$pathfull.'");' : '');
-            $objectQuery->moveNext();
+
             $count++;
         }
         // End Add thumbnail

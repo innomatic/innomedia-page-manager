@@ -85,8 +85,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             <change>'
             .\Shared\Wui\WuiXml::cdata(
                 'var pageid = document.getElementById(\'pageid\').value;
+                xajax_LoadContentLang(\''.$module.'\', \''.$page.'\', pageid);
                 xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid);
-                xajax_LoadContentLang(\''.$module.'\', \''.$page.'\', pageid);'
+                '
             ).'
             </change>
             </events>
@@ -103,19 +104,18 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     public static function ajaxLoadContentLang($module, $page, $pageid)
     {
 
-        $languages = \Innomedia\Locale\LocaleWebApp::getListLanguageAvailable();
+        $languages = \Innomedia\Locale\LocaleWebApp::getListLanguagesAvailable();
 
         $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
             'innomedia-page-manager::pagemanager_panel',
             InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
         );
 
-
-        $defaultLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage();
+        $currentLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage('backend');
         $xml = '
             <horizgroup><children>
             <label><args><label>'.WuiXml::cdata($localeCatalog->getStr('lang_select_label')).'</label></args></label>
-            <combobox><args><id>lang</id><default>'.WuiXml::cdata($defaultLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
+            <combobox><args><id>lang</id><default>'.WuiXml::cdata($currentLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
               <events>
               <change>'
                 .\Shared\Wui\WuiXml::cdata(
@@ -129,7 +129,6 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             </combobox>
             </children></horizgroup>
         ';
-        // xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', \''.$pageid.'\');
         $objResponse = new XajaxResponse();
         $objResponse->addAssign("lang_list", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('', $xml));
 
