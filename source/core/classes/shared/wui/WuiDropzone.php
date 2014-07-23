@@ -52,9 +52,9 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $containerDropzoneId = "container_$id";
         $this->mLayout = ($this->mComments ? '<!-- begin ' . $this->mName . ' dropzone -->' : '') .
         $this->mLayout .= $dropzoneJs.'<div id="'.$containerDropzoneId.'">
-<div id="'.$id.'"></div>
-<script>
-var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).'/dropzone/'.$fileParameters.'"';
+            <div id="'.$id.'"></div>
+            <script>
+            var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).'/dropzone/'.$fileParameters.'"';
 
         if (isset($maxFiles)) {
             $this->mLayout .= ', maxFiles: '.$maxFiles;
@@ -66,7 +66,18 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
                 var mediaName = file.name;       
 
                 if (mediaId != null) {
-                    xajax_WuiDropzoneRemoveMedia(\''.$containerDropzoneId.'\', \''.$page.'\', \''.$pageId.'\', \''.$block.'\', \''.$blockCounter.'\', \''.$fileId.'\', \''.$maxFiles.'\', mediaId, mediaName);
+                    xajax_WuiDropzoneRemoveMedia(
+                        \''.$containerDropzoneId.'\', 
+                        \''.$page.'\', 
+                        \''.$pageId.'\', 
+                        \''.$block.'\', 
+                        \''.$blockCounter.'\', 
+                        \''.$fileId.'\', 
+                        \''.$maxFiles.'\', 
+                        \''.$fieldName.'\', 
+                        mediaId, 
+                        mediaName
+                    );
 
                 } else {
 
@@ -107,12 +118,11 @@ var dropzone = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).
         }
         // End Add thumbnail
 
-$this->mLayout .=
-'document.querySelector("#'.$id.'").classList.add("dropzone");
-var existingFileCount = '.$count.'; // The number of files already uploaded
-dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
-</script>
-</div>';
+        $this->mLayout .= 'document.querySelector("#'.$id.'").classList.add("dropzone");
+            var existingFileCount = '.$count.'; // The number of files already uploaded
+            dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
+            </script>
+            </div>';
 
         $this->mLayout .= $this->mComments ? '<!-- end ' . $this->mName . " dropzone -->\n" : '';
 
@@ -128,53 +138,18 @@ dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
      * @param  integer $blockCounter        if of block
      * @param  string  $fileId              type of media
      * @param  integer $maxFiles            number max of image for gallery
+     * @param  integer $fieldName           name of field image in innomedia_blocks
      * @param  integer $mediaId             id of media
      * @param  string  $mediaName           name of media
      * @return object                       return a object
      */
-    public static function ajaxRemoveMedia($containerDropzoneId, $page, $pageId, $block, $blockCounter, $fileId, $maxFiles, $mediaId, $mediaName)
+    public static function ajaxRemoveMedia($containerDropzoneId, $page, $pageId, $block, $blockCounter, $fileId, $maxFiles, $fieldName, $mediaId, $mediaName)
     {
 
         // Delete image from Innomedia_media
         $image = new \Innomedia\Media($mediaId);
         $image->retrieve();
-        $image->delete();
-
-        // Delete ref image from innomedia_blocks
-        $domainDa = InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')
-            ->getCurrentDomain()
-            ->getDataAccess();
-
-        $checkQuery = $domainDa->execute(
-            "SELECT     id, params
-                FROM    innomedia_blocks
-                WHERE   block = '$block'
-                    AND counter = $blockCounter
-                    AND page = '$page'
-                    AND pageid ".($pageId != 0 ? "= {$pageId}" : "is NULL")
-        );
-
-        if ($checkQuery->getNumberRows() > 0) {
-            $row_id = $checkQuery->getFields('id');
-            $json_params = $checkQuery->getFields('params');
-
-            $params = json_decode($json_params, true);
-            
-            $key = @array_search($mediaId, $params[$fileId.'_id']);
-
-            // remove id image selected
-            unset($params[$fileId.'_id'][$key]); 
-
-            // convet array in a not-associative array
-            $params[$fileId.'_id'] = @array_values($params[$fileId.'_id']);
-            
-            $domainDa->execute(
-                "UPDATE innomedia_blocks
-                SET params=".$domainDa->formatText(json_encode($params)).
-                " WHERE id=$row_id"
-            );
-        
-        }
+        $image->delete($fieldName);
                 
         // Update widget Dropzone
         $objResponse = new XajaxResponse();
@@ -191,6 +166,7 @@ dropzone.options.maxFiles = dropzone.options.maxFiles - existingFileCount;
                   <blockname>'.$blockName.'</blockname>
                   <blockcounter>'.$blockCounter.'</blockcounter>
                   <fileid>'.$fileId.'</fileid>
+                  <fieldname>'.$fieldName.'</fieldname>
                 </args></dropzone>';
 
         $html = WuiXml::getContentFromXml('', $xml);
