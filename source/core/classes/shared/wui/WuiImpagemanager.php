@@ -70,28 +70,31 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         $languages = \Innomedia\Locale\LocaleWebApp::getListLanguagesAvailable();
         $currentLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage('backend');
 
-        $xml .= '   <label row="'.$gridRow.'" col="0" halign="right"><args><bold>true</bold><label>Lingua Editabile: </label></args></label>
-                    <combobox row="'.$gridRow++.'" col="1">
-                    <args><id>lang</id><default>'.WuiXml::cdata($currentLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
-                    <events>
-                        <change>'
-                            .\Shared\Wui\WuiXml::cdata(
-                                'var lang = document.getElementById(\'lang\');
-                                var langvalue = lang.options[lang.selectedIndex].value;
-                                xajax_WuiImpagemanagerSetLangForEditContext(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', langvalue);
-                                '
-                            ).'
-                        </change>
-                    </events>
-                    </combobox>
-                </children></grid>
-                <horizbar/>
-            <grid><children>';
+        if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
+
+            $xml .= '   <label row="'.$gridRow.'" col="0" halign="right"><args><bold>true</bold><label>Lingua Editabile: </label></args></label>
+                        <combobox row="'.$gridRow++.'" col="1">
+                        <args><id>lang</id><default>'.WuiXml::cdata($currentLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
+                        <events>
+                            <change>'
+                                .\Shared\Wui\WuiXml::cdata(
+                                    'var lang = document.getElementById(\'lang\');
+                                    var langvalue = lang.options[lang.selectedIndex].value;
+                                    xajax_WuiImpagemanagerSetLangForEditContext(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', langvalue);
+                                    '
+                                ).'
+                            </change>
+                        </events>
+                        </combobox>
+                    </children></grid>
+                    <horizbar/>
+                <grid><children>';
+        }
 
         $gridRow = 0;
-        $xml .= '<label row="'.$gridRow++.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($languages[$currentLanguage]).'</label></args></label>';
-
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
+            $xml .= '<label row="'.$gridRow++.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($languages[$currentLanguage]).'</label></args></label>';
+
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
                 <string row="'.$gridRow.'" col="1" halign="" valign="" colspan="3"><args><id>page_title</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['title']).'</value><size>80</size></args></string>
