@@ -67,7 +67,34 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
              */
         }
 
+        $languages = \Innomedia\Locale\LocaleWebApp::getListLanguagesAvailable();
+        $currentLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage('backend');
+
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
+
+            $xml .= '   <label row="'.$gridRow.'" col="0" halign="right"><args><bold>true</bold><label>Lingua Editabile: </label></args></label>
+                        <combobox row="'.$gridRow++.'" col="1">
+                        <args><id>lang</id><default>'.WuiXml::cdata($currentLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
+                        <events>
+                            <change>'
+                                .\Shared\Wui\WuiXml::cdata(
+                                    'var lang = document.getElementById(\'lang\');
+                                    var langvalue = lang.options[lang.selectedIndex].value;
+                                    xajax_WuiImpagemanagerSetLangForEditContext(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', langvalue);
+                                    '
+                                ).'
+                            </change>
+                        </events>
+                        </combobox>
+                    </children></grid>
+                    <horizbar/>
+                <grid><children>';
+        }
+
+        $gridRow = 0;
+        if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
+            $xml .= '<label row="'.$gridRow++.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($languages[$currentLanguage]).'</label></args></label>';
+
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
                 <string row="'.$gridRow.'" col="1" halign="" valign="" colspan="3"><args><id>page_title</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['title']).'</value><size>80</size></args></string>
@@ -115,7 +142,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     $xml .= '<vertgroup row="'.$gridRow.'" col="'.$column.'" halign="left" valign="top" colspan="'.$colspan.'" rowspan="'.$rowspan.'"><children>';
                     foreach ($blocks[$row][$column] as $position => $block) {
                         $hasBlockManager = false;
-                        $blockName = ucfirst($block['module']).': '.ucfirst($block['name']);
+
+                        $context = \Innomedia\Context::instance('\Innomedia\Context');
+                        $nolocale = \Innomedia\Block::isNoLocale($context, $block['module'], $block['name']);
+
+                        $blockName = $nolocale ? 'NON TRADUCIBILE - ' : '';
+                        $blockName .= ucfirst($block['module']).': '.ucfirst($block['name']);
                         $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
 
 
@@ -131,7 +163,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                         WuiXml::encode($headers)
                                         .'</headers></args><children><vertgroup row="0" col="0"><args><width>'.($column == 2 ? '700' : '250').'</width></args><children>'.
                                         $manager->getManagerXml().'</children></vertgroup></children></table>';
-                               }
+                                }
                             }
                         }
 
@@ -142,8 +174,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     $xml .= '</children></vertgroup>';
                 } elseif (isset($cellParameters[$row][$column])) {
                     // Check if the cell supports user/instance blocks for the current cell and scope
-                    if (
-                        isset($cellParameters[$row][$column]['accepts'])
+                    if ( isset($cellParameters[$row][$column]['accepts'])
                         && is_array($cellParameters[$row][$column]['accepts'])
                         && isset($cellParameters[$row][$column]['scope'])
                         && $cellParameters[$row][$column]['scope'] == $editorPage->getScope()
@@ -174,7 +205,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                                         WuiXml::encode($headers)
                                                         .'</headers></args><children><vertgroup row="0" col="0"><args><width>'.($column == 2 ? '700' : '250').'</width></args><children>'.
                                                         $manager->getManagerXml().'</children></vertgroup></children></table>';
-                                               }
+                                                }
                                             }
                                         }
 
@@ -191,165 +222,227 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                               <action>javascript:void(0)</action>
                                             </args>
                                               <events>
-                                                <click>xajax_WuiImpagemanagerRemoveBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
+                                                <click>
+                                                    xajax_WuiImpagemanagerRemoveBlock(
+                                                        \''.$module.'\', 
+                                                        \''.$page.'\', 
+                                                        \''.$pageId.'\', 
+                                                        \''.$row.'\', 
+                                                        \''.$column.'\', 
+                                                        \''.$position.'\'
+                                                    );
+                                                </click>
                                               </events>
                                           </button>';
 
-                                         if ($position > 1) {
-                                             $xml .= '<button>
-                                            <args>
-                                          <horiz>true</horiz>
-                                          <frame>false</frame>
-                                          <themeimage>arrowup</themeimage>
-                                          <themeimagetype>mini</themeimagetype>
-                                          <action>javascript:void(0)</action>
-                                        </args>
-                                          <events>
-                                            <click>xajax_WuiImpagemanagerRaiseBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
-                                          </events>
-                                      </button>';
-                                     }
+                                        if ($position > 1) {
+                                            $xml .= '<button>
+                                                <args>
+                                                  <horiz>true</horiz>
+                                                  <frame>false</frame>
+                                                  <themeimage>arrowup</themeimage>
+                                                  <themeimagetype>mini</themeimagetype>
+                                                  <action>javascript:void(0)</action>
+                                                </args>
+                                                <events>
+                                                    <click>
+                                                        xajax_WuiImpagemanagerRaiseBlock(
+                                                            \''.$module.'\', 
+                                                            \''.$page.'\', 
+                                                            \''.$pageId.'\', 
+                                                            \''.$row.'\', 
+                                                            \''.$column.'\', 
+                                                            \''.$position.'\'
+                                                        );
+                                                    </click>
+                                                </events>
+                                            </button>';
+                                        }
 
-                                     if ($position < $positions) {
-                                         $xml .= '<button>
+                                        if ($position < $positions) {
+                                            $xml .= '<button>
+                                                <args>
+                                                  <horiz>true</horiz>
+                                                  <frame>false</frame>
+                                                  <themeimage>arrowdown</themeimage>
+                                                  <themeimagetype>mini</themeimagetype>
+                                                  <action>javascript:void(0)</action>
+                                                </args>
+                                                <events>
+                                                    <click>
+                                                        xajax_WuiImpagemanagerLowerBlock(
+                                                            \''.$module.'\', 
+                                                            \''.$page.'\', 
+                                                            \''.$pageId.'\', 
+                                                            \''.$row.'\', 
+                                                            \''.$column.'\', 
+                                                            \''.$position.'\'
+                                                        );
+                                                    </click>
+                                                </events>
+                                            </button>';
+                                        }
+
+                                        $xml .= '</children></vertgroup></children></horizgroup>';
+                                    }
+                                }
+                            }
+
+                            // Build the list of supported blocks
+                            $supportedList = array();
+                            foreach ($supportedBlocks as $supportedBlock) {
+                                list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
+                                $supportedList[$supportedModule.'/'.$supportedBlock] = ucfirst($supportedModule).': '.ucfirst($supportedBlock);
+                            }
+
+                            $addBlockName = 'addblockname'.rand();
+
+                            $xml .= '<horizgroup><args><width>0%</width></args><children>';
+                            $xml .= '<label><args><label>'.WuiXml::cdata($localeCatalog->getStr('add_block_label')).'</label></args></label>';
+                            $xml .= '<combobox><args><id>'.$addBlockName.'</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
+                            $xml .= '<button>
                                         <args>
                                           <horiz>true</horiz>
                                           <frame>false</frame>
-                                          <themeimage>arrowdown</themeimage>
+                                          <themeimage>mathadd</themeimage>
                                           <themeimagetype>mini</themeimagetype>
                                           <action>javascript:void(0)</action>
                                         </args>
-                                          <events>
-                                            <click>xajax_WuiImpagemanagerLowerBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', \''.$row.'\', \''.$column.'\', \''.$position.'\')</click>
-                                          </events>
-                                      </button>';
-                                    }
-
-                                    $xml .= '</children></vertgroup></children></horizgroup>';
-                                }
-                            }
+                                        <events>
+                                            <click>'
+                                            .WuiXml::cdata(
+                                                'var page = document.getElementById(\''.$addBlockName.'\');
+                                                var pagevalue = page.options[page.selectedIndex].value;
+                                                var elements = pagevalue.split(\'/\');
+                                                xajax_WuiImpagemanagerAddBlock(
+                                                    \''.$module.'\', 
+                                                    \''.$page.'\', 
+                                                    \''.$pageId.'\', 
+                                                    elements[0], 
+                                                    elements[1], 
+                                                    \''.$row.'\', 
+                                                    \''.$column.'\', 
+                                                    \''.($position+1).'\'
+                                                );'
+                                            ).'</click>
+                                        </events>
+                                    </button>';
+                            
+                            $xml .= '</children></horizgroup>';
+                            $xml .= '</children></vertframe>';
                         }
-                        // Build the list of supported blocks
-                        $supportedList = array();
-                        foreach ($supportedBlocks as $supportedBlock) {
-                            list($supportedModule, $supportedBlock) = explode('/', $supportedBlock);
-                            $supportedList[$supportedModule.'/'.$supportedBlock] = ucfirst($supportedModule).': '.ucfirst($supportedBlock);
-                        }
-
-                        $addBlockName = 'addblockname'.rand();
-
-                        $xml .= '<horizgroup><args><width>0%</width></args><children>';
-                        $xml .= '<label><args><label>'.WuiXml::cdata($localeCatalog->getStr('add_block_label')).'</label></args></label>';
-                        $xml .= '<combobox><args><id>'.$addBlockName.'</id><elements type="array">'.\Shared\Wui\WuiXml::encode($supportedList).'</elements></args></combobox>';
-                        $xml .= '<button>
-<args>
-  <horiz>true</horiz>
-  <frame>false</frame>
-  <themeimage>mathadd</themeimage>
-  <themeimagetype>mini</themeimagetype>
-  <action>javascript:void(0)</action>
-</args>
-              <events>
-              <click>'.WuiXml::cdata('
-          var page = document.getElementById(\''.$addBlockName.'\');
-          var pagevalue = page.options[page.selectedIndex].value;
-          var elements = pagevalue.split(\'/\');
-                xajax_WuiImpagemanagerAddBlock(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', elements[0], elements[1], \''.$row.'\', \''.$column.'\', \''.($position+1).'\');
-                ').'</click>
-              </events>
-</button>
-';
-                        $xml .= '</children></horizgroup>';
-
-                        $xml .= '</children></vertframe>';
                     }
                 }
             }
         }
-    }
 
-    $xml .= '</children></grid>
-        </children></form>
-        <horizbar/>
+        $xml .= '</children></grid>
+            </children></form>
+            <horizbar/>
+            <horizgroup><args><width>0%</width></args><children>';
 
-        <horizgroup><args><width>0%</width></args><children>
-        ';
+        $xml .= '<button>
+                <args>
+                    <horiz>true</horiz>
+                    <frame>false</frame>
+                    <themeimage>buttonok</themeimage>
+                    <label>'.$localeCatalog->getStr('save_button').'</label>
+                    <action>javascript:void(0)</action>
+                </args>
+        		<events>
+                    <click>'
+                    .WuiXml::cdata(
+                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'; ')
+                        .(($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
+                        'var pageTitle = document.getElementById(\'page_title\').value;
+                        var metaKeys  = document.getElementById(\'page_meta_keys\').value;
+                        var metaDescription = document.getElementById(\'page_meta_description\').value;' :
+                        'var pageTitle = \'\';
+                            var metaKeys  = \'\';
+                        var metaDescription = \'\';').'
+                                          var kvpairs = [];
+                        var form = document.getElementById(\'impagemanager\');
+                        for ( var i = 0; i < form.elements.length; i++ ) {
+                            var e = form.elements[i];
+                            if (e.type == \'checkbox\') {
+                                if (e.checked) {
+                                    kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+                                }
+                            } else if (e.type == \'radio\') {
+                                if (e.checked) {
+                                    kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+                                }
+                            } else {
+                                kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+                            }
+                        }
+                        var params = kvpairs.join(\'&\');
+                        xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, pageTitle, metaDescription, metaKeys, params)'
+                    )
+                    .'</click>
+        		</events>
+            </button>
+            <button>
+                <args>
+                  <horiz>true</horiz>
+                  <frame>false</frame>
+                  <themeimage>buttoncancel</themeimage>
+                  <label>'.$localeCatalog->getStr('revert_button').'</label>
+                  <action>javascript:void(0)</action>
+                </args>
+                <events>
+                    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
+                </events>
+            </button>';
 
-        $xml .= '  <button>
-<args>
-  <horiz>true</horiz>
-  <frame>false</frame>
-  <themeimage>buttonok</themeimage>
-  <mainaction>true</mainaction>
-  <label>'.$localeCatalog->getStr('save_button').'</label>
-      <action>javascript:void(0)</action>
-    </args>
-    			  <events>
-                  <click>'.WuiXml::cdata(($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'; ').
-        (($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
-
-'var pageTitle = document.getElementById(\'page_title\').value;
-var metaKeys  = document.getElementById(\'page_meta_keys\').value;
-var metaDescription = document.getElementById(\'page_meta_description\').value;' :
-'var pageTitle = \'\';
-    var metaKeys  = \'\';
-var metaDescription = \'\';').'
-                  var kvpairs = [];
-var form = document.getElementById(\'impagemanager\');
-for ( var i = 0; i < form.elements.length; i++ ) {
-    var e = form.elements[i];
-    if (e.type == \'checkbox\') {
-        if (e.checked) {
-            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
+        if ($pageId != 0) {
+              $xml .= '
+                  <button>
+                    <args>
+                      <horiz>true</horiz>
+                      <frame>false</frame>
+                      <themeimage>trash</themeimage>
+                      <label>'.$localeCatalog->getStr('delete_button').'</label>
+                      <action>javascript:void(0)</action>
+                    </args>
+                    <events>
+                        <click>xajax_WuiImpagemanagerDeletePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
+                    </events>
+                  </button>';
         }
-    } else if (e.type == \'radio\') {
-        if (e.checked) {
-            kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
-        }
-    } else {
-        kvpairs.push(encodeURIComponent(e.id) + \'=\' + encodeURIComponent(e.value));
-    }
-}
-var params = kvpairs.join(\'&\');
-xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, pageTitle, metaDescription, metaKeys, params)').'</click>
-    			  </events>
-  </button>
-  <button>
-    <args>
-      <horiz>true</horiz>
-      <frame>false</frame>
-      <themeimage>buttoncancel</themeimage>
-      <label>'.$localeCatalog->getStr('revert_button').'</label>
-      <action>javascript:void(0)</action>
-    </args>
-    			  <events>
-    			    <click>xajax_WuiImpagemanagerRevertPage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
-    			  </events>
-  </button>';
-
-  if ($pageId != 0) {
-      $xml .= '
-  <button>
-    <args>
-      <horiz>true</horiz>
-      <frame>false</frame>
-      <themeimage>trash</themeimage>
-      <dangeraction>true</dangeraction>
-      <label>'.$localeCatalog->getStr('delete_button').'</label>
-      <action>javascript:void(0)</action>
-    </args>
-    			  <events>
-    			    <click>xajax_WuiImpagemanagerDeletePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\')</click>
-    			  </events>
-  </button>
-';
-    }
 
         $xml .= '</children></horizgroup>
             </children></vertgroup>';
 
         return WuiXml::getContentFromXml('', $xml);
     }
+
+    public static function ajaxSetLangForEditContext($module, $page, $pageid, $lang)
+    {
+        $session = DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session;
+        $session->put('innomedia_lang_for_edit_context', $lang);
+        
+        $objResponse = new XajaxResponse();
+        
+        $sScript = "
+            function refreshWuiImpagemanager()
+            {
+                promise = refreshForLanguage();
+            }
+            function refreshForLanguage()  
+            {
+                d = new $.Deferred();
+                setTimeout('xajax_WuiImpagemanagerLoadPage(\"$module\", \"$page\", \"$pageid\");d.resolve()',0);
+                return d.promise()
+            }
+            refreshWuiImpagemanager();
+        ";
+        $objResponse->addScript($sScript);
+        // $objResponse->addAssign("wui_impagemanager", "innerHTML", self::getHTML($module, $page, $pageId, false));
+
+        return $objResponse;
+    }
+
 
     public static function ajaxLoadPage($module, $pageName, $pageId)
     {
@@ -564,7 +657,7 @@ xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', 
 
         $sScript = "$('select#page').val('$module/$page').trigger('change');";
         $objResponse->addScript($sScript);
-
+        
         $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;

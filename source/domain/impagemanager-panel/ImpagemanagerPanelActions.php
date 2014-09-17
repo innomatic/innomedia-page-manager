@@ -29,7 +29,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
 
     public static function ajaxAddContent($module, $page)
     {
-        $contentPage = new \Innomedia\Page($module, $page);
+        $pageid = 0;
+        $scope_page = 'backend';
+        $contentPage = new \Innomedia\Page($module, $page, $pageid, $scope_page);
         $contentPage->addContent();
         $xml = '<vertgroup><children>
             <horizbar />
@@ -86,65 +88,16 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             .\Shared\Wui\WuiXml::cdata(
                 'var pageid = document.getElementById(\'pageid\').value;
                 xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid);
-                xajax_LoadContentLang(\''.$module.'\', \''.$page.'\', pageid);'
+                '
             ).'
             </change>
             </events>
             </combobox>
             </children></horizgroup>';
 
-
         $objResponse = new XajaxResponse();
         $objResponse->addAssign("content_list", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('contentlist', $xml));
 
-        return $objResponse;
-    }
-
-    public static function ajaxLoadContentLang($module, $page, $pageid)
-    {
-
-        // @TODO: read dinamically
-        $languages = array('it' => 'Italiano', 'eng' => 'English');
-
-        $localeCatalog = new \Innomatic\Locale\LocaleCatalog(
-            'innomedia-page-manager::pagemanager_panel',
-            InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
-        );
-
-
-        $defaultLanguage = \Innomedia\Locale\LocaleWebApp::getCurrentLanguage();
-        $xml = '
-            <horizgroup><children>
-            <label><args><label>'.WuiXml::cdata($localeCatalog->getStr('lang_select_label')).'</label></args></label>
-            <combobox><args><id>lang</id><default>'.WuiXml::cdata($defaultLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
-              <events>
-              <change>'
-                .\Shared\Wui\WuiXml::cdata(
-                    'var lang = document.getElementById(\'lang\');
-                    var langvalue = lang.options[lang.selectedIndex].value;
-                    xajax_SetLangForEditContext(\''.$module.'\', \''.$page.'\', \''.$pageid.'\', langvalue);
-                    '
-                ).'
-              </change>
-              </events>
-            </combobox>
-            </children></horizgroup>
-        ';
-        // xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', \''.$pageid.'\');
-        $objResponse = new XajaxResponse();
-        $objResponse->addAssign("lang_list", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('', $xml));
-
-        return $objResponse;
-    }
-
-    public static function ajaxSetLangForEditContext($module, $page, $pageid, $lang)
-    {
-        $session = DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session;
-        $session->put('innomedia_lang_for_edit_context', $lang);
-        
-        $objResponse = new XajaxResponse();
-        $objResponse->addScript("xajax_WuiImpagemanagerLoadPage('$module', '$page', '$pageid');");
-     
         return $objResponse;
     }
 
@@ -189,7 +142,7 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
                             if (class_exists($managerClass)) {
                                 $manager = new $managerClass('', 1, 0);
                                 $manager->saveBlock($decodedParams[$module][$block][1]);
-                           }
+                            }
                         }
                     }
                 }

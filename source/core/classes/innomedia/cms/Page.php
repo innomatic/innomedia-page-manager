@@ -19,6 +19,8 @@ class Page
     protected $context;
     protected $page;
     protected $scope;
+    protected $scope_session;
+
 
     /**
      * Page properties from page definition
@@ -27,8 +29,9 @@ class Page
      */
     protected $properties = array();
 
-    public function __construct(\Innomatic\Webapp\WebAppSession $session, $module, $pageName, $pageId = 0)
+    public function __construct(\Innomatic\Webapp\WebAppSession $session, $module, $pageName, $pageId = 0, $scope_session='backend')
     {
+        $this->scope_session   = $scope_session;
         $this->module   = strlen($module) ? $module : 'home';
         $this->pageName = strlen($pageName) ? $pageName : 'index';
         $this->pageId   = $pageId;
@@ -39,7 +42,7 @@ class Page
         }
         $this->session  = $session;
         $this->context  = \Innomedia\Context::instance('\Innomedia\Context');
-        $this->page     = new \Innomedia\Page($this->module, $this->pageName, $this->pageId);
+        $this->page     = new \Innomedia\Page($this->module, $this->pageName, $this->pageId, $this->scope_session);
 
         $this->page->parsePage();
 
@@ -131,7 +134,7 @@ class Page
 
         // Checks if the page definition exists in session
         if (!$this->session->isValid('innomedia_page_manager_blocks')) {
-            $pageObj = new \Innomedia\Page($this->module, $this->pageName, $this->pageId);
+            $pageObj = new \Innomedia\Page($this->module, $this->pageName, $this->pageId, $this->scope_session);
 
             $def = yaml_parse_file($page);
             $properties = array();
