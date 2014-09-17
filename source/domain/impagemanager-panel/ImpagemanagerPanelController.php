@@ -30,7 +30,7 @@ class ImpagemanagerPanelController extends \Innomatic\Desktop\Panel\PanelControl
                                     WuiXml::encode($headers)
                                     .'</headers></args><children><vertgroup row="0" col="0"><args><width>100%</width></args><children>'.
                                     $manager->getManagerXml().'</children></vertgroup></children></table>';
-                           }
+                            }
                         }
                     }
                 }
