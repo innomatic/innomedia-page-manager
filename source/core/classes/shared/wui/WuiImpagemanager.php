@@ -52,13 +52,13 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
         if ($editorPage->getPageId() != 0) {
             $xml .= '
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
+                <string row="'.$gridRow.'" col="1" halign="" valign="" colspan="3"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
+                <tooltip row="'.$gridRow++.'" col="4"><args><content>'.WuiXml::cdata($localeCatalog->getStr('page_name_tooltip')).'</content></args></tooltip>
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_id_label')).'</label></args></label>
                 <label row="'.$gridRow.'" col="1"><args><label>'.WuiXml::cdata($editorPage->getPageId()).'</label><bold>true</bold></args></label>
                 <label row="'.$gridRow.'" col="2" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_address_label')).'</label></args></label>
                 <link row="'.$gridRow++.'" col="3"><args><target>_blank</target><label>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</label><link>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</link></args></link>
-                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_name_label')).'</label></args></label>
-                <string row="'.$gridRow.'" col="1" halign="" valign="" colspan="3"><args><id>page_name</id><value>'.WuiXml::cdata($editorPage->getPage()->getName()).'</value><size>80</size></args></string>
-                <tooltip row="'.$gridRow++.'" col="4"><args><content>'.WuiXml::cdata($localeCatalog->getStr('page_name_tooltip')).'</content></args></tooltip>
               ';
 
             /*
@@ -72,7 +72,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
 
-            $xml .= '   <label row="'.$gridRow.'" col="0" halign="right"><args><bold>true</bold><label>Lingua Editabile: </label></args></label>
+            $xml .= '   <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('editing_language_label')).'</label></args></label>
                         <combobox row="'.$gridRow++.'" col="1">
                         <args><id>lang</id><default>'.WuiXml::cdata($currentLanguage).'</default><elements type="array">'.WuiXml::encode($languages).'</elements></args>
                         <events>
@@ -93,8 +93,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
         $gridRow = 0;
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
-            $xml .= '<label row="'.$gridRow++.'" col="0" halign="right"><args><bold>true</bold><label>'.WuiXml::cdata($languages[$currentLanguage]).'</label></args></label>';
-
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
                 <string row="'.$gridRow.'" col="1" halign="" valign="" colspan="3"><args><id>page_title</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['title']).'</value><size>80</size></args></string>
@@ -146,10 +144,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                         $context = \Innomedia\Context::instance('\Innomedia\Context');
                         $nolocale = \Innomedia\Block::isNoLocale($context, $block['module'], $block['name']);
 
-                        $blockName = $nolocale ? 'NON TRADUCIBILE - ' : '';
-                        $blockName .= ucfirst($block['module']).': '.ucfirst($block['name']);
+                        $blockName  = ucfirst($block['module']).': '.ucfirst($block['name']);
+                        $blockName .= $nolocale ? $localeCatalog->getStr('not_translatable_label') : '';
                         $blockCounter = isset($block['counter']) ? $block['counter'] : 1;
-
 
                         $fqcn = \Innomedia\Block::getClass($context, $block['module'], $block['name']);
                         if (class_exists($fqcn)) {
@@ -346,6 +343,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                     <horiz>true</horiz>
                     <frame>false</frame>
                     <themeimage>buttonok</themeimage>
+                    <mainaction>true</mainaction>
                     <label>'.$localeCatalog->getStr('save_button').'</label>
                     <action>javascript:void(0)</action>
                 </args>
@@ -402,6 +400,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                       <horiz>true</horiz>
                       <frame>false</frame>
                       <themeimage>trash</themeimage>
+                      <dangeraction>true</dangeraction>
                       <label>'.$localeCatalog->getStr('delete_button').'</label>
                       <action>javascript:void(0)</action>
                     </args>
