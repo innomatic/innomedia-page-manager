@@ -2,6 +2,8 @@
 ------------------
 CHANGES:
 - Moved global parameters section to its own panel. (Alex Pagnoni)
+- Splitted content and static pages editing and moved static pages settings
+  to the settings panel. (Alex Pagnoni)
 
 
 

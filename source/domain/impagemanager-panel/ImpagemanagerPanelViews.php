@@ -190,7 +190,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     public function viewPages($eventData)
     {
         $context = \Innomedia\Context::instance('\Innomedia\Context');
-        $pagesList = \Innomedia\Page::getPagesList();
+        $pagesList = \Innomedia\Page::getNoInstancePagesList();
 
         $pagesComboList = array();
 

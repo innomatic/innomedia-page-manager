@@ -26,13 +26,19 @@ class ImsitesettingsPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         $this->icon = 'settings1';
 
-        $this->toolbars['global'] = array(
-          'default' => array(
-            'label'         => $this->localeCatalog->getStr('global_toolbar'),
-            'themeimage'    => 'settings1',
-            'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-            'horiz'         => 'true'
-          )
+        $this->toolbars['settings'] = array(
+            'general' => array(
+                'label'         => $this->localeCatalog->getStr('global_settings_toolbar'),
+                'themeimage'    => 'settings1',
+                'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+                'horiz'         => 'true'
+            ),
+            'pages' => array(
+                'label'         => $this->localeCatalog->getStr('pages_settings_toolbar'),
+                'themeimage'    => 'documenttext',
+                'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'pages', ''))),
+                'horiz'         => 'true'
+            )
         );
     }
 
@@ -66,7 +72,6 @@ class ImsitesettingsPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewDefault($eventData)
     {
-
         $this->pageXml = '<vertgroup><children>
           <form><args><id>globalparamsform</id></args><children><divframe><args><id>global_parameters</id></args><children>
           ';
@@ -115,7 +120,45 @@ class ImsitesettingsPanelViews extends \Innomatic\Desktop\Panel\PanelViews
           </children></horizgroup>
           </children>
           </vertgroup>';
-
     }
 
+    public function viewPages($eventData)
+    {
+        $context = \Innomedia\Context::instance('\Innomedia\Context');
+        $pagesList = \Innomedia\Page::getInstancePagesList();
+
+        $pagesComboList = array();
+
+        foreach ($pagesList as $pageItem) {
+            list($module, $page) = explode('/', $pageItem);
+            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
+        }
+        ksort($pagesComboList);
+        $firstPage = key($pagesComboList);
+        list($module, $page) = explode('/', $firstPage);
+
+        $this->pageXml = '<vertgroup>
+            <children>
+            <horizgroup><args><width>0%</width></args>
+            <children>
+            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('page_type_label')).'</label></args></label>
+            <combobox><args><id>page</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
+              <events>
+              <change>
+              var page = document.getElementById(\'page\');
+              var pagevalue = page.options[page.selectedIndex].value;
+              var elements = pagevalue.split(\'/\');
+              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1], 0)</change>
+              </events>
+            </combobox>
+            <formarg><args><id>pageid</id><value>0</value></args></formarg>
+            </children>
+            </horizgroup>
+            <horizbar />
+            <impagemanager>
+              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page></args>
+            </impagemanager>
+            </children>
+            </vertgroup>';
+    }
 }
