@@ -1,5 +1,7 @@
 1.2.0
 ------------------
+CHANGES:
+- Moved global parameters section to its own panel. (Alex Pagnoni)
 
 
 

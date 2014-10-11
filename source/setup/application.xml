@@ -37,6 +37,7 @@
 
         <domaingroup name="web" catalog="innomedia-page-manager::panels" />
 		<domainpanel name="impagemanager" category="web" catalog="innomedia-page-manager::panels" />
+        <domainpanel name="imsitesettings" category="preferences" catalog="innomedia-page-manager::panels" />
         <class name="innomedia/cms/Page.php" />
         <class name="innomedia/dropzone/WebAppHandler.php" />
 		<catalog name="innomedia-page-manager" />
