@@ -4,14 +4,14 @@
 
    InnoMedia Page Manager build file
 
-   Copyright (C) 2014 Innoteam Srl All rights reserved.
+   Copyright (C) 2014 Innomatic Company All rights reserved.
 
   =======================================================================
 -->
 <project name="InnoMedia Page Manager" default="build">
 
 	<property name="name" value="innomedia-page-manager" />
-	<property name="version" value="1.0.0" />
+	<property name="version" value="1.1.0" />
 
     <target name="init" depends="initdir">
     </target>

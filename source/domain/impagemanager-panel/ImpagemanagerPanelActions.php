@@ -29,7 +29,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
 
     public static function ajaxAddContent($module, $page)
     {
-        $contentPage = new \Innomedia\Page($module, $page);
+        $pageid = 0;
+        $scope_page = 'backend';
+        $contentPage = new \Innomedia\Page($module, $page, $pageid, $scope_page);
         $contentPage->addContent();
         $xml = '<vertgroup><children>
             <horizbar />
@@ -82,12 +84,15 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             <elements type="array">'.\Shared\Wui\WuiXml::encode($pages).'</elements>
             </args>
             <events>
-            <change>'.\Shared\Wui\WuiXml::cdata('
-        var pageid = document.getElementById(\'pageid\').value;
-              xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid)').'</change>
+            <change>'
+            .\Shared\Wui\WuiXml::cdata(
+                'var pageid = document.getElementById(\'pageid\').value;
+                xajax_WuiImpagemanagerLoadPage(\''.$module.'\', \''.$page.'\', pageid);
+                '
+            ).'
+            </change>
             </events>
             </combobox>
-
             </children></horizgroup>';
 
         $objResponse = new XajaxResponse();
@@ -137,7 +142,7 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
                             if (class_exists($managerClass)) {
                                 $manager = new $managerClass('', 1, 0);
                                 $manager->saveBlock($decodedParams[$module][$block][1]);
-                           }
+                            }
                         }
                     }
                 }
