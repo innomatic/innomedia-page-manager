@@ -67,61 +67,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         );
     }
 
-    public function viewContent($eventData)
-    {
-        $pagesList = \Innomedia\Page::getInstancePagesList();
-        $pageId    = isset($eventData['pageid']) && (int)$eventData['pageid'] != 0 ? $eventData['pageid'] : 0;
-
-        $pagesComboList = array();
-        $pagesComboList[] = '';
-
-        foreach ($pagesList as $pageItem) {
-            list($module, $page) = explode('/', $pageItem);
-            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
-        }
-        ksort($pagesComboList);
-
-        if (isset($eventData['module']) && isset($eventData['page']) && isset($pagesComboList[$eventData['module'].'/'.$eventData['page']])) {
-            $module = $eventData['module'];
-            $page   = $eventData['page'];
-            $firstPage = $module.'/'.$page;
-        } else {
-            $firstPage = key($pagesComboList);
-            list($module, $page) = explode('/', $firstPage);
-        }
-
-        $this->pageXml = '<vertgroup>
-            <children>
-            <horizgroup><args><width>0%</width></args>
-            <children>
-            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('content_type_label')).'</label></args></label>
-            <combobox><args><id>page</id><default>'.WuiXml::cdata($firstPage).'</default><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
-              <events>
-              <change>
-              var page = document.getElementById(\'page\');
-              var pagevalue = page.options[page.selectedIndex].value;
-              var elements = pagevalue.split(\'/\');
-              xajax_LoadContentList(elements[0], elements[1])</change>
-              </events>
-            </combobox>
-            <divframe><args><id>content_list</id></args><children><void /></children></divframe>
-            <divframe><args><id>lang_list</id></args><children><void /></children></divframe>
-            <!--
-            <formarg><args><id>pageid</id><value>'.$pageId.'</value></args></formarg>
-            -->
-            </children>
-            </horizgroup>
-            <horizbar />
-            <divframe><args><id>content_editor</id></args><children><void /></children></divframe>
-            <impagemanager>
-            <!--
-              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page><pageid>'.$pageId.'</pageid></args>
-              -->
-              </impagemanager>
-            </children>
-            </vertgroup>';
-    }
-
     public function viewAddcontent($eventData)
     {
         $pagesList = \Innomedia\Page::getInstancePagesList();
