@@ -8,6 +8,7 @@ use \Shared\Wui;
 
 class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 {
+    protected $container;
     protected $localeCatalog;
     protected $pageTitle;
     protected $pageXml;
@@ -19,37 +20,22 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function beginHelper()
     {
+        $this->container = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer');
+
         $this->localeCatalog = new LocaleCatalog(
             'innomedia-page-manager::pagemanager_panel',
-            \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer')->getCurrentUser()->getLanguage()
+            $this->container->getCurrentUser()->getLanguage()
         );
 
         $this->icon = 'documentcopy';
 
-        if (count(\Innomedia\Page::getInstancePagesList()) > 0) {
-            $this->toolbars['content'] = array(
-                'content' => array(
-                  'label'         => $this->localeCatalog->getStr('content_toolbar'),
-                  'themeimage'    => 'documenttext',
-                  'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
-                  'horiz'         => 'true'
-                ),
-                'addcontent' => array(
-                  'label'         => $this->localeCatalog->getStr('newcontent_toolbar'),
-                  'themeimage'    => 'mathadd',
-                  'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'addcontent', ''))),
-                  'horiz'         => 'true'
-                )
-            );
-        }
-
-        $this->toolbars['pages'] = array(
-          'default' => array(
-            'label'         => $this->localeCatalog->getStr('pages_toolbar'),
-            'themeimage'    => 'documenttext',
-            'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'pages', ''))),
-            'horiz'         => 'true'
-          )
+        $this->toolbars['content'] = array(
+            'content' => array(
+              'label'         => $this->localeCatalog->getStr('content_toolbar'),
+              'themeimage'    => 'documenttext',
+              'action'        => \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString('', array(array('view', 'default', ''))),
+              'horiz'         => 'true'
+            )
         );
     }
 
@@ -81,9 +67,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         );
     }
 
-    public function viewDefault($eventData)
+    public function viewContent($eventData)
     {
-        $context   = \Innomedia\Context::instance('\Innomedia\Context');
         $pagesList = \Innomedia\Page::getInstancePagesList();
         $pageId    = isset($eventData['pageid']) && (int)$eventData['pageid'] != 0 ? $eventData['pageid'] : 0;
 
@@ -139,7 +124,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewAddcontent($eventData)
     {
-        $context = \Innomedia\Context::instance('\Innomedia\Context');
         $pagesList = \Innomedia\Page::getInstancePagesList();
 
         $pagesComboList = array();
@@ -171,7 +155,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   var page = document.getElementById(\'pagetype\');
                   var pagevalue = page.options[page.selectedIndex].value;
                   var elements = pagevalue.split(\'/\');
-                  xajax_AddContent(elements[0], elements[1])</click>
+                  xajax_AddContent(elements[0], elements[1], '.$eventData['parentid'].')</click>
                   </events>
               </button>
 
@@ -189,7 +173,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewPages($eventData)
     {
-        $context = \Innomedia\Context::instance('\Innomedia\Context');
         $pagesList = \Innomedia\Page::getNoInstancePagesList();
 
         $pagesComboList = array();
@@ -226,4 +209,185 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </children>
             </vertgroup>';
     }
+
+    public function viewDefault($eventData)
+    {
+        if (!isset($eventData['parentid'])) {
+            $parentId = 0;
+        } else {
+            $parentId = $eventData['parentid'];
+        }
+
+        $parents_query = $this->container->getCurrentDomain()->getDataAccess()->execute(
+            'SELECT innomedia_pages.id,parent_id,name FROM innomedia_pages_tree,innomedia_pages WHERE id=page_id'
+        );
+
+        $pages = array();
+        $nodes = array();
+        while (!$parents_query->eof) {
+            $nodes[$parents_query->getFields('id')] = $parents_query->getFields('parent_id');
+            $pages[$parents_query->getFields('id')] = $parents_query->getFields('name');
+            $parents_query->moveNext();
+        }
+
+        $tree_nodes = array();
+        $tree_leafs = array();
+
+        foreach ($nodes as $node_id => $parent_id) {
+            if (isset($nodes[$node_id])) {
+                $tree_nodes[$parent_id][] = array('title' => $pages[$node_id], 'id' => $node_id);
+            } else {
+                $tree_leafs[$parent_id][] = array('title' => $pages[$node_id], 'id' => $node_id);
+            }
+        }
+
+        $tree_menu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
+
+        $homeAction = WuiEventsCall::buildEventsCallString(
+            '', [['view', 'default', ['parentid' => 0]]]
+        );
+
+        $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
+        $editAction = WuiEventsCall::buildEventsCallString(
+            '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
+        );
+
+        $addAction = WuiEventsCall::buildEventsCallString(
+            '', [['view', 'addcontent', ['parentid' => $parentId]]]
+        );
+
+        $this->pageXml = '
+<vertgroup>
+  <children>
+    <horizgroup>
+      <args>
+        <width>120</width>
+      </args>
+      <children>
+
+        <!-- Content tree -->
+
+        <vertgroup>
+          <children>
+            <link>
+              <args>
+                <label>'.WuiXml::cdata($this->localeCatalog->getStr('home_label')).'</label>
+                <bold>true</bold>
+                <link>'.WuiXml::cdata($homeAction).'</link>
+              </args>
+            </link>
+            <treevmenu><args><menu type="array">'.WuiXml::encode($tree_menu).'</menu></args></treevmenu>
+          </children>
+        </vertgroup>
+
+        <vertbar />
+
+        <vertgroup>
+          <children>
+
+            <!-- Page preview -->
+
+            <horizgroup>
+              <children>
+
+             <button>
+                <args>
+                  <horiz>true</horiz>
+                  <frame>false</frame>
+                  <themeimage>pencil</themeimage>
+                  <label>'.$this->localeCatalog->getStr('editcontent_button').'</label>
+                  <action>'.WuiXml::cdata($editAction).'</action>
+                </args>
+              </button>
+
+              </children>
+            </horizgroup>
+
+            <horizbar />
+
+            <horizgroup>
+              <children>
+
+             <button>
+                <args>
+                  <horiz>true</horiz>
+                  <frame>false</frame>
+                  <themeimage>mathadd</themeimage>
+                  <label>'.$this->localeCatalog->getStr('addcontent_button').'</label>
+                  <action>'.WuiXml::cdata($addAction).'</action>
+                </args>
+              </button>
+
+              </children>
+            </horizgroup>
+
+            <!-- Page children -->
+
+          </children>
+        </vertgroup>
+
+      </children>
+    </horizgroup>
+  </children>
+</vertgroup>';
+
+    }
+
+    public function viewPage($eventData)
+    {
+        $module  = $eventData['module'];
+        $page    = $eventData['page'];
+        $pageId  = isset($eventData['pageid']) ? $eventData['pageid'] : 0;
+
+        $this->pageXml = '<vertgroup>
+            <children>
+            <impagemanager>
+              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page><pageid>'.$pageId.'</pageid></args>
+            </impagemanager>
+            </children>
+            </vertgroup>';
+    }
+
+    protected function buildTreeMenu($catList, $nodesList, $level = 1, $id = 0)
+    {
+        $menu = '';
+        $dots = '';
+
+        for ($i = 1; $i <= $level; $i++) {
+            $dots .= '.';
+        }
+
+        foreach ($catList[$id] as $data) {
+            $editAction = WuiEventsCall::buildEventsCallString(
+                '',
+                [['view', 'default', ['parentid' => $data['id']]]]
+            );
+            $menu .= $dots.'|'.( strlen( $data['title'] ) > 25 ? substr( $data['title'], 0, 23 ).'...' : $data['title'] ).'|'.$editAction.'|'.$data['title'].'||'."\n";
+
+            $menu .= $this->buildTreeMenu($catList, $nodesList, $level + 1, $data['id']);
+
+            foreach ($nodesList[$data['id']] as $node_data) {
+                $editAction = WuiEventsCall::buildEventsCallString(
+                    '',
+                    [['view', 'default', ['parentid' => $node_data['id']]]]
+                );
+
+                $menu .= $dots.'.|'.( strlen( $node_data['title'] ) > 25 ? substr( $node_data['title'], 0, 23 ).'...' : $node_data['title'] ).'|'.$editAction.'|'.$node_data['title'].'||'
+                ."\n";
+            }
+        }
+
+        if ($level == 1) {
+            foreach ($nodesList[0] as $node_data) {
+                $editAction = WuiEventsCall::buildEventsCallString(
+                    '',
+                    [['view', 'default', ['parentid' => $node_data['id']]]]
+                );
+
+                $menu .= '.|'.( strlen( $node_data['title'] ) > 25 ? substr( $node_data['title'], 0, 23 ).'...' : $node_data['title'] ).'|'.$editAction.'|'.$node_data['title'].'||'."\n";
+            }
+        }
+        return $menu;
+    }
+
 }

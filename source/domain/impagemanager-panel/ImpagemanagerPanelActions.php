@@ -27,12 +27,12 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     {
     }
 
-    public static function ajaxAddContent($module, $page)
+    public static function ajaxAddContent($module, $page, $parentId)
     {
         $pageid = 0;
         $scope_page = 'backend';
         $contentPage = new \Innomedia\Page($module, $page, $pageid, $scope_page);
-        $contentPage->addContent();
+        $contentPage->addContent($parentId);
         $xml = '<vertgroup><children>
             <horizbar />
             <impagemanager>
