@@ -287,6 +287,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
             <!-- Page preview -->
 
+            <label>
+              <args>
+                <label>'.WuiXml::cdata($this->localeCatalog->getStr('preview_content_label')).'</label>
+                <bold>true</bold>
+              </args>
+            </label>
+
             <horizgroup>
               <children>
 
@@ -305,6 +312,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
             <horizbar />
 
+            <label>
+              <args>
+                <label>'.WuiXml::cdata($this->localeCatalog->getStr('children_content_label')).'</label>
+                <bold>true</bold>
+              </args>
+            </label>
+
             <horizgroup>
               <children>
 
@@ -313,7 +327,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <horiz>true</horiz>
                   <frame>false</frame>
                   <themeimage>mathadd</themeimage>
-                  <label>'.$this->localeCatalog->getStr('addcontent_button').'</label>
+                  <label>'.$this->localeCatalog->getStr('newcontent_button').'</label>
                   <action>'.WuiXml::cdata($addAction).'</action>
                 </args>
               </button>
