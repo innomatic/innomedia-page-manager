@@ -9,6 +9,7 @@ use \Shared\Wui;
 class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 {
     protected $container;
+    protected $dataAccess;
     protected $localeCatalog;
     protected $pageTitle;
     protected $pageXml;
@@ -21,6 +22,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     public function beginHelper()
     {
         $this->container = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer');
+        $this->dataAccess = $this->container->getCurrentDomain()->getDataAccess();
 
         $this->localeCatalog = new LocaleCatalog(
             'innomedia-page-manager::pagemanager_panel',
@@ -163,7 +165,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $parentId = $eventData['parentid'];
         }
 
-        $parents_query = $this->container->getCurrentDomain()->getDataAccess()->execute(
+        $parents_query = $this->dataAccess->execute(
             'SELECT innomedia_pages.id,parent_id,name FROM innomedia_pages_tree,innomedia_pages WHERE id=page_id'
         );
 
@@ -200,19 +202,53 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $addAction = WuiEventsCall::buildEventsCallString(
             '', [['view', 'addcontent', ['parentid' => $parentId]]]
         );
+        
+        $childrenCount = 0;
+        $pageChildren = [];
+        if (is_numeric($parentId)) {
+            $pageTree = new \Innomedia\PageTree();
+            $childrenCount = count($pageTree->getPageChildren($parentId));
+            
+            if ($childrenCount > 0) {
+                $pagesQuery = $this->dataAccess->execute(
+                    'SELECT pg.id, pg.page, pg.name '.
+                    'FROM innomedia_pages AS pg '.
+                    'JOIN innomedia_pages_tree AS pt '.
+                    'ON pg.id=pt.page_id '.
+                    'WHERE pt.parent_id = '.$parentId
+                );
+                
+                while (!$pagesQuery->eof) {
+                    list ($module, $page) = explode('/', $pagesQuery->getFields('page'));
+                    
+                    $pageChildren[] = [
+                        'id'     => $pagesQuery->getFields('id'),
+                        'name'   => $pagesQuery->getFields('name'),
+                        'module' => $module,
+                        'page'   => $page
+                    ];
+                    
+                    $pagesQuery->moveNext();
+                }
+            }
+        }
+        
+        $tableHeaders = [];
+        $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
+        $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
 
         $this->pageXml = '
 <vertgroup>
   <children>
     <horizgroup>
-      <args>
-        <width>120</width>
-      </args>
       <children>
 
         <!-- Content tree -->
 
         <vertgroup>
+          <args>
+            <width>0%</width>
+          </args>
           <children>
             <link>
               <args>
@@ -228,6 +264,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         <vertbar />
 
         <vertgroup>
+      <args>
+        <width>100%</width>
+      </args>
           <children>
 
             <!-- Page preview -->
@@ -257,6 +296,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
             <horizbar />
 
+            <!-- Page children -->
+
             <label>
               <args>
                 <label>'.WuiXml::cdata($this->localeCatalog->getStr('children_content_label')).'</label>
@@ -276,12 +317,52 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <action>'.WuiXml::cdata($addAction).'</action>
                 </args>
               </button>
-
+                      
               </children>
-            </horizgroup>
+            </horizgroup>';
 
-            <!-- Page children -->
+        if ($childrenCount == 0) {
+            $this->pageXml .= '
+            <label>
+              <args>
+                <label>'.WuiXml::cdata($this->localeCatalog->getStr('no_children_label')).'</label>
+              </args>
+            </label>';
+        } else {
+            $this->pageXml .= '
+                <table>
+                  <args>
+                    <headers type="array">'.WuiXml::encode($tableHeaders).'</headers>
+                    <width>100%</width>
+                  </args>
+                  <children>';
+            
+            $tableRow = 0;
+            foreach ($pageChildren as $page) {
+                $childViewAction = WuiEventsCall::buildEventsCallString(
+                    '', [['view', 'default', ['parentid' => $page['id']]]]
+                );
 
+                $this->pageXml .= '
+                    <link row="'.$tableRow.'" col="0">
+                      <args>
+                        <label>'.WuiXml::cdata($page['name']).'</label>
+                        <link>'.WuiXml::cdata($childViewAction).'</link>
+                      </args>
+                    </link>
+                    <label row="'.$tableRow.'" col="1">
+                      <args>
+                        <label>'.WuiXml::cdata(ucfirst($page['module'].' / '.ucfirst($page['page']))).'</label>
+                      </args>
+                    </label>';
+                $tableRow++;
+            }
+            $this->pageXml .= '
+                  </children>
+                </table>';
+        }
+
+        $this->pageXml .= '
           </children>
         </vertgroup>
 
