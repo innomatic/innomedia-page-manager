@@ -43,9 +43,9 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             <form><name>impagemanager</name>
               <args><id>impagemanager</id></args>
               <children>
-
+<!--
                 <formarg><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value></args></formarg>
-
+-->
               <grid><children>';
 
         $gridRow = 0;
@@ -60,11 +60,6 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                 <label row="'.$gridRow.'" col="2" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_address_label')).'</label></args></label>
                 <link row="'.$gridRow++.'" col="3"><args><target>_blank</target><label>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</label><link>'.WuiXml::cdata($editorPage->getPage()->getPageUrl(true)).'</link></args></link>
               ';
-
-            /*
-                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
-             */
         }
 
         $languages = \Innomedia\Locale\LocaleWebApp::getListLanguagesAvailable();
@@ -92,6 +87,12 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         }
 
         $gridRow = 0;
+        if ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0) {
+            $xml .= ' 
+                <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
+            '; 
+        }
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
             $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_title_label')).'</label></args></label>
@@ -350,7 +351,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         		<events>
                     <click>'
                     .WuiXml::cdata(
-                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\'; var urlKeywords = \'\'; ')
+                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\';')
                         .(($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
                         'var pageTitle = document.getElementById(\'page_title\').value;
                         var metaKeys  = document.getElementById(\'page_meta_keys\').value;
