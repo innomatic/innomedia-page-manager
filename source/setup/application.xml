@@ -11,7 +11,7 @@
 		<description>InnoMedia Page Manager</description>
 		<category>web</category>
 		<dependencies>
-			<dependency>innomedia[2.2.0]</dependency>
+			<dependency>innomedia[2.3.0]</dependency>
 		</dependencies>
 		<legal>
 			<author>
