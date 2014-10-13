@@ -123,7 +123,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $isContentPage = false;
         $isModule      = false;
         $isStaticPage  = false;
-        
+
         if (!isset($eventData['parentid'])) {
             $parentId = 0;
         } else {
@@ -139,7 +139,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         } else {
             $isContentPage = true;
         }
-        
+
         // Extract all the pages with a node in the page tree path.
         //
         $parents_query = $this->dataAccess->execute(
@@ -164,7 +164,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             if ($module == 'home' && $page != 'index') {
                 // Put home pages under home root node, excluding the index page.
                 //
-                $nodes['page_'.$module.'_'.$page] = 0; 
+                $nodes['page_'.$module.'_'.$page] = 0;
                 $pages['page_'.$module.'_'.$page] = ucfirst($page);
             } elseif ($staticPage == 'home/index') {
                 // Skip the home/index page
@@ -173,12 +173,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 //
                 $nodes['module_'.$module] = 0;
                 $pages['module_'.$module] = ucfirst($module);
-                
+
                 $nodes['page_'.$module.'_'.$page] = 'module_'.$module;
                 $pages['page_'.$module.'_'.$page] = ucfirst($page);
             }
         }
-        
+
         // Build the pages list with their parents.
         //
         while (!$parents_query->eof) {
@@ -186,7 +186,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $pages[$parents_query->getFields('id')] = $parents_query->getFields('name');
             $parents_query->moveNext();
         }
-        
+
         $tree_nodes = array();
         $tree_leafs = array();
 
@@ -237,7 +237,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 '', [['view', 'addcontent', ['parentid' => $parentId]]]
             );
         }
-        
+
         // Build the children pages table.
         //
         $childrenCount = 0;
@@ -247,7 +247,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             //
             $pageTree = new \Innomedia\PageTree();
             $childrenCount = count($pageTree->getPageChildren($parentId));
-            
+
             if ($childrenCount > 0) {
                 $pagesQuery = $this->dataAccess->execute(
                     'SELECT pg.id, pg.page, pg.name '.
@@ -256,17 +256,17 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     'ON pg.id=pt.page_id '.
                     'WHERE pt.parent_id = '.$parentId
                 );
-                
+
                 while (!$pagesQuery->eof) {
                     list ($module, $page) = explode('/', $pagesQuery->getFields('page'));
-                    
+
                     $pageChildren[] = [
                         'id'     => $pagesQuery->getFields('id'),
                         'name'   => strlen($pagesQuery->getFields('name')) ? $pagesQuery->getFields('name') : $pagesQuery->getFields('id'),
                         'module' => $module,
                         'page'   => $page
                     ];
-                    
+
                     $pagesQuery->moveNext();
                 }
             }
@@ -274,10 +274,10 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             // This is a static page.
             //
             $parentModule = substr($parentId, strlen('module_'));
- 
+
             foreach ($staticPages as $staticPage) {
                 list($module, $page) = explode('/', $staticPage);
-                
+
                 if ($module == $parentModule) {
                     $pageChildren[] = [
                         'id'     => 'page_'.$module.'_'.$page,
@@ -289,7 +289,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 }
             }
         }
-        
+
         // Check if there are pages with no tree path (for compatibility with
         // old content pages).
         //
@@ -303,14 +303,14 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 'ON pg.id = pt.page_id '.
                 'WHERE pt.page_id IS NULL'
             );
-            
+
             // Get the list of the static pages.
             //
             $staticPages = \Innomedia\Page::getNoInstancePagesList();
 
             while (!$orphanPagesQuery->eof) {
                 $orphanPageData = $orphanPagesQuery->getFields();
-                
+
                 // Exlude static pages with saved page parameters.
                 //
                 if (!in_array($orphanPageData['page'], $staticPages)) {
@@ -323,15 +323,15 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         'name'   => strlen($orphanPageData['name']) ? $orphanPageData['name'] : $orphanPageData['id'],
                         'module' => $module,
                         'page'   => $page
-                    ]; 
+                    ];
                     $childrenCount++;
-                } 
+                }
                 $orphanPagesQuery->moveNext();
             }
-            
+
             $orphanPagesQuery->free();
         }
-        
+
         $tableHeaders = [];
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
@@ -366,7 +366,10 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <args>
         <width>100%</width>
       </args>
-          <children>
+          <children>';
+
+        if ($isModule == false) {
+            $this->pageXml .= '
 
             <!-- Page preview -->
 
@@ -396,10 +399,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $this->pageXml .= '
               </children>
             </horizgroup>';
-        
+
+            if (!$isStaticPage) {
+                $this->pageXml .= '
+            <horizbar />';
+            }
+        }
+
         if (!$isStaticPage) {
             $this->pageXml .= '
-            <horizbar />
+
             <!-- Page children -->
 
             <label>
@@ -424,11 +433,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <action>'.WuiXml::cdata($addAction).'</action>
                 </args>
               </button>
-                      
+
               </children>
             </horizgroup>';
         }
-        
+
             if ($childrenCount == 0) {
             $this->pageXml .= '
             <label>
@@ -444,13 +453,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     <width>100%</width>
                   </args>
                   <children>';
-            
+
                 $tableRow = 0;
                 foreach ($pageChildren as $page) {
                     $childViewAction = WuiEventsCall::buildEventsCallString(
                         '', [['view', 'default', ['parentid' => $page['id']]]]
                     );
-    
+
                     $this->pageXml .= '
                     <link row="'.$tableRow.'" col="0">
                       <args>
@@ -463,7 +472,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         <label>'.WuiXml::cdata(ucfirst($page['module'].' / '.ucfirst($page['page']))).'</label>
                       </args>
                     </label>';
-                    
+
                     if ($isContentPage == true) {
                         // Prepare WUI events calls for panel actions.
                         //
