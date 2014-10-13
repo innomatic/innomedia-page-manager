@@ -27,6 +27,18 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     {
     }
 
+    public function executeDeletecontent($eventData)
+    {
+        $editorPage = new \Innomedia\Cms\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $eventData['module'],
+            $eventData['page'],
+            $eventData['pageid']
+        );
+        $editorPage->parsePage();
+        $editorPage->deletePage();        
+    }
+
     public static function ajaxAddContent($module, $page, $parentId)
     {
         $pageid = 0;

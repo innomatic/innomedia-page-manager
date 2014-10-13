@@ -120,22 +120,26 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewDefault($eventData)
     {
+        $isContentPage = false;
+        $isModule      = false;
+        $isStaticPage  = false;
+        
         if (!isset($eventData['parentid'])) {
             $parentId = 0;
         } else {
             $parentId = $eventData['parentid'];
         }
 
-        $isModule = false;
-        $isStaticPage = false;
-        
         if (!is_numeric($parentId)) {
             if (substr($parentId, 0, strlen('module_')) == 'module_') {
                 $isModule = true;
             } elseif (substr($parentId, 0, strlen('page_')) == 'page_') {
                 $isStaticPage = true;
             }
+        } else {
+            $isContentPage = true;
         }
+        
         // Extract all the pages with a node in the page tree path.
         //
         $parents_query = $this->dataAccess->execute(
@@ -459,6 +463,35 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         <label>'.WuiXml::cdata(ucfirst($page['module'].' / '.ucfirst($page['page']))).'</label>
                       </args>
                     </label>';
+                    
+                    if ($isContentPage == true) {
+                        // Prepare WUI events calls for panel actions.
+                        //
+                        $editAction  = WuiEventsCall::buildEventsCallString('', [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]);
+                        $deleteAction = WuiEventsCall::buildEventsCallString('', [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]);
+
+                        $this->pageXml .= '
+    <innomatictoolbar row="'.$tableRow.'" col="2">
+      <args>
+        <frame>false</frame>
+        <toolbars type="array">'.WuiXml::encode([
+            'view' => [
+                'edit' => [
+                    'label' => $this->localeCatalog->getStr('edit_item_button'),
+                    'themeimage' => 'pencil',
+                    'horiz' => 'true',
+                    'action' => $editAction],
+                'delete' => [
+                    'label' => $this->localeCatalog->getStr('delete_item_button'),
+                    'needconfirm' => 'true',
+                    'confirmmessage' => $this->localeCatalog->getStr('delete_confirm_message'),
+                    'themeimage' => 'trash',
+                    'horiz' => 'true',
+                    'action' => $deleteAction]
+            ]]).'</toolbars>
+      </args>
+    </innomatictoolbar>';
+                    }
                     $tableRow++;
                 }
                 $this->pageXml .= '
