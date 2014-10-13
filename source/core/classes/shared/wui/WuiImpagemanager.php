@@ -44,7 +44,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
               <args><id>impagemanager</id></args>
               <children>
 <!--
-                <formarg><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value></args></formarg>
+                <formarg><args><id>page_slug</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['slug']).'</value></args></formarg>
 -->
               <grid><children>';
 
@@ -90,7 +90,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         if ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0) {
             $xml .= ' 
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
-                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_url_keywords</id><value>'.WuiXml::cdata($editorPage->getPage()->getUrlKeywords()).'</value><size>80</size></args></string>
+                <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_slug</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['slug']).'</value><size>80</size></args></string>
             '; 
         }
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
@@ -351,7 +351,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         		<events>
                     <click>'
                     .WuiXml::cdata(
-                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var urlKeywords = document.getElementById(\'page_url_keywords\').value;' : 'var pageName = \'\';')
+                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var pageSlug = document.getElementById(\'page_slug\').value;' : 'var pageName = \'\';')
                         .(($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
                         'var pageTitle = document.getElementById(\'page_title\').value;
                         var metaKeys  = document.getElementById(\'page_meta_keys\').value;
@@ -376,7 +376,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                             }
                         }
                         var params = kvpairs.join(\'&\');
-                        xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, urlKeywords, pageTitle, metaDescription, metaKeys, params)'
+                        xajax_WuiImpagemanagerSavePage(\''.$module.'\', \''.$page.'\', \''.$pageId.'\', pageName, pageSlug, pageTitle, metaDescription, metaKeys, params)'
                     )
                     .'</click>
         		</events>
@@ -550,7 +550,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         return $objResponse;
     }
 
-    public static function ajaxSavePage($module, $page, $pageId, $pageName, $urlKeywords, $pageTitle, $metaDescription, $metaKeys, $parameters)
+    public static function ajaxSavePage($module, $page, $pageId, $pageName, $pageSlug, $pageTitle, $metaDescription, $metaKeys, $parameters)
     {
         $objResponse = new XajaxResponse();
         if (!(strlen($module) && strlen($page))) {
@@ -565,7 +565,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         );
         $editorPage->parsePage();
         $editorPage->getPage()->setName($pageName)
-            ->setUrlKeywords($urlKeywords)
+            ->setParameter('slug', $pageSlug)
             ->setParameter('title', $pageTitle)
             ->setParameter('meta_description', $metaDescription)
             ->setParameter('meta_keys', $metaKeys);
