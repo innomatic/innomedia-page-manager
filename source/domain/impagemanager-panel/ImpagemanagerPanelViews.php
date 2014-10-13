@@ -190,19 +190,27 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         $tree_menu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
 
+        // Action for going to the home page.
+        //
         $homeAction = WuiEventsCall::buildEventsCallString(
             '', [['view', 'default', ['parentid' => 0]]]
         );
 
+        // Action for editing the current page.
+        //
         $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
         $editAction = WuiEventsCall::buildEventsCallString(
             '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
         );
 
+        // Action for adding a child page.
+        //
         $addAction = WuiEventsCall::buildEventsCallString(
             '', [['view', 'addcontent', ['parentid' => $parentId]]]
         );
         
+        // Build the children pages table.
+        //
         $childrenCount = 0;
         $pageChildren = [];
         if (is_numeric($parentId)) {
@@ -223,7 +231,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     
                     $pageChildren[] = [
                         'id'     => $pagesQuery->getFields('id'),
-                        'name'   => $pagesQuery->getFields('name'),
+                        'name'   => strlen($pagesQuery->getFields('name')) ? $pagesQuery->getFields('name') : $pagesQuery->getFields('id'),
                         'module' => $module,
                         'page'   => $page
                     ];
@@ -231,6 +239,47 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     $pagesQuery->moveNext();
                 }
             }
+        }
+        
+        // Check if there are pages with no tree path (for compatibility with
+        // old content pages).
+        //
+        if ($parentId == 0) {
+            // Extract all the pages without a page tree path.
+            //
+            $orphanPagesQuery = $this->dataAccess->execute(
+                'SELECT pg.id, pg.page, pg.name '.
+                'FROM innomedia_pages AS pg '.
+                'LEFT JOIN innomedia_pages_tree AS pt '.
+                'ON pg.id = pt.page_id '.
+                'WHERE pt.page_id IS NULL'
+            );
+            
+            // Get the list of the static pages.
+            //
+            $staticPages = \Innomedia\Page::getNoInstancePagesList();
+
+            while (!$orphanPagesQuery->eof) {
+                $orphanPageData = $orphanPagesQuery->getFields();
+                
+                // Exlude static pages with saved page parameters.
+                //
+                if (!in_array($orphanPageData['page'], $staticPages)) {
+                    list ($module, $page) = explode('/', $orphanPageData['page']);
+
+                    // Add the orphan page to the page children list.
+                    //
+                    $pageChildren[] = [
+                        'id'     => $orphanPageData['id'],
+                        'name'   => strlen($orphanPageData['name']) ? $orphanPageData['name'] : $orphanPageData['id'],
+                        'module' => $module,
+                        'page'   => $page
+                    ]; 
+                } 
+                $orphanPagesQuery->moveNext();
+            }
+            
+            $orphanPagesQuery->free();
         }
         
         $tableHeaders = [];
