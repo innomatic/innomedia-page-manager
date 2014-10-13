@@ -204,6 +204,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             }
         }
         
+        // Build the pages list with their parents.
+        //
         while (!$parents_query->eof) {
             $nodes[$parents_query->getFields('id')] = $parents_query->getFields('parent_id');
             $pages[$parents_query->getFields('id')] = $parents_query->getFields('name');
@@ -213,10 +215,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $tree_nodes = array();
         $tree_leafs = array();
 
+        // Add content pages to the page tree.
+        //
         foreach ($nodes as $node_id => $parent_id) {
             if (isset($nodes[$node_id])) {
+                // This page has children, so set it as a node.
+                //
                 $tree_nodes[$parent_id][] = array('title' => $pages[$node_id], 'id' => $node_id);
             } else {
+                // This page has no children, so set it as a leaf.
+                //
                 $tree_leafs[$parent_id][] = array('title' => $pages[$node_id], 'id' => $node_id);
             }
         }
