@@ -118,45 +118,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </children></vertgroup>';
     }
 
-    public function viewPages($eventData)
-    {
-        $pagesList = \Innomedia\Page::getNoInstancePagesList();
-
-        $pagesComboList = array();
-
-        foreach ($pagesList as $pageItem) {
-            list($module, $page) = explode('/', $pageItem);
-            $pagesComboList[$pageItem] = ucfirst($module).': '.ucfirst($page);
-        }
-        ksort($pagesComboList);
-        $firstPage = key($pagesComboList);
-        list($module, $page) = explode('/', $firstPage);
-
-        $this->pageXml = '<vertgroup>
-            <children>
-            <horizgroup><args><width>0%</width></args>
-            <children>
-            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('page_type_label')).'</label></args></label>
-            <combobox><args><id>page</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
-              <events>
-              <change>
-              var page = document.getElementById(\'page\');
-              var pagevalue = page.options[page.selectedIndex].value;
-              var elements = pagevalue.split(\'/\');
-              xajax_WuiImpagemanagerLoadPage(elements[0], elements[1], 0)</change>
-              </events>
-            </combobox>
-            <formarg><args><id>pageid</id><value>0</value></args></formarg>
-            </children>
-            </horizgroup>
-            <horizbar />
-            <impagemanager>
-              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page></args>
-            </impagemanager>
-            </children>
-            </vertgroup>';
-    }
-
     public function viewDefault($eventData)
     {
         if (!isset($eventData['parentid'])) {
@@ -165,6 +126,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $parentId = $eventData['parentid'];
         }
 
+        $isModule = false;
+        $isStaticPage = false;
+        
+        if (!is_numeric($parentId)) {
+            if (substr($parentId, 0, strlen('module_')) == 'module_') {
+                $isModule = true;
+            } elseif (substr($parentId, 0, strlen('page_')) == 'page_') {
+                $isStaticPage = true;
+            }
+        }
         // Extract all the pages with a node in the page tree path.
         //
         $parents_query = $this->dataAccess->execute(
@@ -189,8 +160,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             if ($module == 'home' && $page != 'index') {
                 // Put home pages under home root node, excluding the index page.
                 //
-                $nodes[$module.'_'.$page] = 0; 
-                $pages[$module.'_'.$page] = ucfirst($page);
+                $nodes['page_'.$module.'_'.$page] = 0; 
+                $pages['page_'.$module.'_'.$page] = ucfirst($page);
             } elseif ($staticPage == 'home/index') {
                 // Skip the home/index page
             } else {
@@ -199,8 +170,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 $nodes['module_'.$module] = 0;
                 $pages['module_'.$module] = ucfirst($module);
                 
-                $nodes[$module.'_'.$page] = 'module_'.$module;
-                $pages[$module.'_'.$page] = ucfirst($page);
+                $nodes['page_'.$module.'_'.$page] = 'module_'.$module;
+                $pages['page_'.$module.'_'.$page] = ucfirst($page);
             }
         }
         
@@ -240,23 +211,36 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         );
 
         // Action for editing the current page.
+        // Not available when opening a module.
         //
-        $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
-        $editAction = WuiEventsCall::buildEventsCallString(
-            '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
-        );
+        if (is_numeric($parentId)) {
+            $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
+            $editAction = WuiEventsCall::buildEventsCallString(
+                '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
+            );
+        } elseif ($isStaticPage == true) {
+            list(, $module, $page) = explode('_', $parentId);
+
+            $editAction = WuiEventsCall::buildEventsCallString(
+                '', [['view', 'page', ['module' => $module, 'page' => $page, 'pageid' => 0]]]
+            );
+        }
 
         // Action for adding a child page.
         //
-        $addAction = WuiEventsCall::buildEventsCallString(
-            '', [['view', 'addcontent', ['parentid' => $parentId]]]
-        );
+        if (is_numeric($parentId)) {
+            $addAction = WuiEventsCall::buildEventsCallString(
+                '', [['view', 'addcontent', ['parentid' => $parentId]]]
+            );
+        }
         
         // Build the children pages table.
         //
         $childrenCount = 0;
         $pageChildren = [];
         if (is_numeric($parentId)) {
+            // This is a content page.
+            //
             $pageTree = new \Innomedia\PageTree();
             $childrenCount = count($pageTree->getPageChildren($parentId));
             
@@ -282,12 +266,30 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     $pagesQuery->moveNext();
                 }
             }
+        } else {
+            // This is a static page.
+            //
+            $parentModule = substr($parentId, strlen('module_'));
+ 
+            foreach ($staticPages as $staticPage) {
+                list($module, $page) = explode('/', $staticPage);
+                
+                if ($module == $parentModule) {
+                    $pageChildren[] = [
+                        'id'     => 'page_'.$module.'_'.$page,
+                        'name'   => ucfirst($page),
+                        'module' => $module,
+                        'page'   => $page
+                    ];
+                    $childrenCount++;
+                }
+            }
         }
         
         // Check if there are pages with no tree path (for compatibility with
         // old content pages).
         //
-        if ($parentId == 0) {
+        if (is_numeric($parentId) && $parentId == 0) {
             // Extract all the pages without a page tree path.
             //
             $orphanPagesQuery = $this->dataAccess->execute(
@@ -318,6 +320,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         'module' => $module,
                         'page'   => $page
                     ]; 
+                    $childrenCount++;
                 } 
                 $orphanPagesQuery->moveNext();
             }
@@ -371,8 +374,10 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </label>
 
             <horizgroup>
-              <children>
+              <children>';
 
+        if ($isModule == false) {
+            $this->pageXml .= '
              <button>
                 <args>
                   <horiz>true</horiz>
@@ -381,13 +386,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <label>'.$this->localeCatalog->getStr('editcontent_button').'</label>
                   <action>'.WuiXml::cdata($editAction).'</action>
                 </args>
-              </button>
+              </button>';
+        }
 
+        $this->pageXml .= '
               </children>
-            </horizgroup>
-
+            </horizgroup>';
+        
+        if (!$isStaticPage) {
+            $this->pageXml .= '
             <horizbar />
-
             <!-- Page children -->
 
             <label>
@@ -396,7 +404,10 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 <bold>true</bold>
               </args>
             </label>
+';
 
+        if (is_numeric($parentId)) {
+            $this->pageXml .= '
             <horizgroup>
               <children>
 
@@ -412,16 +423,17 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                       
               </children>
             </horizgroup>';
-
-        if ($childrenCount == 0) {
+        }
+        
+            if ($childrenCount == 0) {
             $this->pageXml .= '
             <label>
               <args>
                 <label>'.WuiXml::cdata($this->localeCatalog->getStr('no_children_label')).'</label>
               </args>
             </label>';
-        } else {
-            $this->pageXml .= '
+            } else {
+                $this->pageXml .= '
                 <table>
                   <args>
                     <headers type="array">'.WuiXml::encode($tableHeaders).'</headers>
@@ -429,13 +441,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   </args>
                   <children>';
             
-            $tableRow = 0;
-            foreach ($pageChildren as $page) {
-                $childViewAction = WuiEventsCall::buildEventsCallString(
-                    '', [['view', 'default', ['parentid' => $page['id']]]]
-                );
-
-                $this->pageXml .= '
+                $tableRow = 0;
+                foreach ($pageChildren as $page) {
+                    $childViewAction = WuiEventsCall::buildEventsCallString(
+                        '', [['view', 'default', ['parentid' => $page['id']]]]
+                    );
+    
+                    $this->pageXml .= '
                     <link row="'.$tableRow.'" col="0">
                       <args>
                         <label>'.WuiXml::cdata($page['name']).'</label>
@@ -447,11 +459,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         <label>'.WuiXml::cdata(ucfirst($page['module'].' / '.ucfirst($page['page']))).'</label>
                       </args>
                     </label>';
-                $tableRow++;
-            }
-            $this->pageXml .= '
+                    $tableRow++;
+                }
+                $this->pageXml .= '
                   </children>
                 </table>';
+            }
         }
 
         $this->pageXml .= '
