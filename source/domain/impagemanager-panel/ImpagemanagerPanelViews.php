@@ -165,18 +165,51 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $parentId = $eventData['parentid'];
         }
 
+        // Extract all the pages with a node in the page tree path.
+        //
         $parents_query = $this->dataAccess->execute(
-            'SELECT innomedia_pages.id,parent_id,name FROM innomedia_pages_tree,innomedia_pages WHERE id=page_id'
+            'SELECT ip.id,ipt.parent_id,ip.name '.
+            'FROM innomedia_pages_tree AS ipt '.
+            'JOIN innomedia_pages AS ip '.
+            'ON ip.id=ipt.page_id'
         );
 
         $pages = array();
         $nodes = array();
+
+        // Get the list of the static pages.
+        //
+        $staticPages = \Innomedia\Page::getNoInstancePagesList();
+
+        // Add static pages to the nodes and pages list.
+        //
+        foreach ($staticPages as $staticPage) {
+            list($module, $page) = explode('/', $staticPage);
+
+            if ($module == 'home' && $page != 'index') {
+                // Put home pages under home root node, excluding the index page.
+                //
+                $nodes[$module.'_'.$page] = 0; 
+                $pages[$module.'_'.$page] = ucfirst($page);
+            } elseif ($staticPage == 'home/index') {
+                // Skip the home/index page
+            } else {
+                // Create a node and a leaf for any other module.
+                //
+                $nodes['module_'.$module] = 0;
+                $pages['module_'.$module] = ucfirst($module);
+                
+                $nodes[$module.'_'.$page] = 'module_'.$module;
+                $pages[$module.'_'.$page] = ucfirst($page);
+            }
+        }
+        
         while (!$parents_query->eof) {
             $nodes[$parents_query->getFields('id')] = $parents_query->getFields('parent_id');
             $pages[$parents_query->getFields('id')] = $parents_query->getFields('name');
             $parents_query->moveNext();
         }
-
+        
         $tree_nodes = array();
         $tree_leafs = array();
 
@@ -188,6 +221,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             }
         }
 
+        // Build the tree menu structure for the WUI widget.
+        //
         $tree_menu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
 
         // Action for going to the home page.
