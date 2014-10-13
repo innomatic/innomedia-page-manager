@@ -27,6 +27,16 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     {
     }
 
+    /* public executeDeletecontent($eventData) {{{ */
+    /**
+     * Action for deleting a content.
+     *
+     * Used by the page children list.
+     *
+     * @param array $eventData WUI event data.
+     * @access public
+     * @return void
+     */
     public function executeDeletecontent($eventData)
     {
         $editorPage = new \Innomedia\Cms\Page(
@@ -36,8 +46,9 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
             $eventData['pageid']
         );
         $editorPage->parsePage();
-        $editorPage->deletePage();        
+        $editorPage->deletePage();
     }
+    /* }}} */
 
     public static function ajaxAddContent($module, $page, $parentId)
     {
