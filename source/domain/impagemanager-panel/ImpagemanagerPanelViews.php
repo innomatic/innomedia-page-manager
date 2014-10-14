@@ -125,12 +125,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $isStaticPage  = false;
 
         if (!isset($eventData['parentid'])) {
-            $parentId = 0;
+            $parentId = '0';
         } else {
             $parentId = $eventData['parentid'];
         }
 
-        if ($parentId == 0) {
+        if ($parentId == '0') {
             $isStaticPage = true;
         } elseif (!is_numeric($parentId)) {
             if (substr($parentId, 0, strlen('module_')) == 'module_') {
@@ -219,7 +219,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         // Action for editing the current page.
         // Not available when opening a module.
         //
-        if ($parentID == 0) {
+        if ($parentId == '0') {
             $editAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'page', ['module' => 'home', 'page' => 'index', 'pageid' => 0]]]
             );
@@ -299,7 +299,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         // Check if there are pages with no tree path (for compatibility with
         // old content pages).
         //
-        if (is_numeric($parentId) && $parentId == 0) {
+        if (is_numeric($parentId) && $parentId == '0') {
             // Extract all the pages without a page tree path.
             //
             $orphanPagesQuery = $this->dataAccess->execute(
@@ -406,13 +406,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               </children>
             </horizgroup>';
 
-            if (!$isStaticPage or $parentId == 0) {
+            if (!$isStaticPage or $parentId == '0') {
                 $this->pageXml .= '
             <horizbar />';
             }
         }
 
-        if (!$isStaticPage or $parentId == 0) {
+        if (!$isStaticPage or $parentId == '0') {
             $this->pageXml .= '
 
             <!-- Page children -->
@@ -479,7 +479,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                       </args>
                     </label>';
 
-                    if ($isContentPage == true) {
+                    if ($isContentPage == true or $parentId == '0') {
                         // Prepare WUI events calls for panel actions.
                         //
                         $editAction  = WuiEventsCall::buildEventsCallString('', [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]);
