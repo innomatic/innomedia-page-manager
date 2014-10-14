@@ -130,7 +130,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $parentId = $eventData['parentid'];
         }
 
-        if (!is_numeric($parentId)) {
+        if ($parentId == 0) {
+            $isStaticPage = true;
+        } elseif (!is_numeric($parentId)) {
             if (substr($parentId, 0, strlen('module_')) == 'module_') {
                 $isModule = true;
             } elseif (substr($parentId, 0, strlen('page_')) == 'page_') {
@@ -217,7 +219,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         // Action for editing the current page.
         // Not available when opening a module.
         //
-        if (is_numeric($parentId)) {
+        if ($parentID == 0) {
+            $editAction = WuiEventsCall::buildEventsCallString(
+                '', [['view', 'page', ['module' => 'home', 'page' => 'index', 'pageid' => 0]]]
+            );
+        } elseif (is_numeric($parentId)) {
             $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
             $editAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
@@ -400,13 +406,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               </children>
             </horizgroup>';
 
-            if (!$isStaticPage) {
+            if (!$isStaticPage or $parentId == 0) {
                 $this->pageXml .= '
             <horizbar />';
             }
         }
 
-        if (!$isStaticPage) {
+        if (!$isStaticPage or $parentId == 0) {
             $this->pageXml .= '
 
             <!-- Page children -->
