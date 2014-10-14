@@ -43,10 +43,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
             <form><name>impagemanager</name>
               <args><id>impagemanager</id></args>
               <children>
-<!--
-                <formarg><args><id>page_slug</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['slug']).'</value></args></formarg>
--->
-              <grid><children>';
+                <grid><children>';
 
         $gridRow = 0;
 
@@ -88,10 +85,10 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
         $gridRow = 0;
         if ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0) {
-            $xml .= ' 
+            $xml .= '
                 <label row="'.$gridRow.'" col="0" halign="right"><args><label>'.WuiXml::cdata($localeCatalog->getStr('page_url_label')).'</label></args></label>
                 <string row="'.$gridRow++.'" col="1" halign="" valign="" colspan="3"><args><id>page_slug</id><value>'.WuiXml::cdata($editorPage->getPage()->getParameters()['slug']).'</value><size>80</size></args></string>
-            '; 
+            ';
         }
         if ($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) {
             $xml .= '
@@ -222,11 +219,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                               <events>
                                                 <click>
                                                     xajax_WuiImpagemanagerRemoveBlock(
-                                                        \''.$module.'\', 
-                                                        \''.$page.'\', 
-                                                        \''.$pageId.'\', 
-                                                        \''.$row.'\', 
-                                                        \''.$column.'\', 
+                                                        \''.$module.'\',
+                                                        \''.$page.'\',
+                                                        \''.$pageId.'\',
+                                                        \''.$row.'\',
+                                                        \''.$column.'\',
                                                         \''.$position.'\'
                                                     );
                                                 </click>
@@ -245,11 +242,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                                 <events>
                                                     <click>
                                                         xajax_WuiImpagemanagerRaiseBlock(
-                                                            \''.$module.'\', 
-                                                            \''.$page.'\', 
-                                                            \''.$pageId.'\', 
-                                                            \''.$row.'\', 
-                                                            \''.$column.'\', 
+                                                            \''.$module.'\',
+                                                            \''.$page.'\',
+                                                            \''.$pageId.'\',
+                                                            \''.$row.'\',
+                                                            \''.$column.'\',
                                                             \''.$position.'\'
                                                         );
                                                     </click>
@@ -269,11 +266,11 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                                 <events>
                                                     <click>
                                                         xajax_WuiImpagemanagerLowerBlock(
-                                                            \''.$module.'\', 
-                                                            \''.$page.'\', 
-                                                            \''.$pageId.'\', 
-                                                            \''.$row.'\', 
-                                                            \''.$column.'\', 
+                                                            \''.$module.'\',
+                                                            \''.$page.'\',
+                                                            \''.$pageId.'\',
+                                                            \''.$row.'\',
+                                                            \''.$column.'\',
                                                             \''.$position.'\'
                                                         );
                                                     </click>
@@ -313,19 +310,19 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
                                                 var pagevalue = page.options[page.selectedIndex].value;
                                                 var elements = pagevalue.split(\'/\');
                                                 xajax_WuiImpagemanagerAddBlock(
-                                                    \''.$module.'\', 
-                                                    \''.$page.'\', 
-                                                    \''.$pageId.'\', 
-                                                    elements[0], 
-                                                    elements[1], 
-                                                    \''.$row.'\', 
-                                                    \''.$column.'\', 
+                                                    \''.$module.'\',
+                                                    \''.$page.'\',
+                                                    \''.$pageId.'\',
+                                                    elements[0],
+                                                    elements[1],
+                                                    \''.$row.'\',
+                                                    \''.$column.'\',
                                                     \''.($position+1).'\'
                                                 );'
                                             ).'</click>
                                         </events>
                                     </button>';
-                            
+
                             $xml .= '</children></horizgroup>';
                             $xml .= '</children></vertframe>';
                         }
@@ -351,7 +348,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
         		<events>
                     <click>'
                     .WuiXml::cdata(
-                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var pageSlug = document.getElementById(\'page_slug\').value;' : 'var pageName = \'\';')
+                        ($pageId != 0 ? 'var pageName = document.getElementById(\'page_name\').value; var pageSlug = document.getElementById(\'page_slug\').value;' : 'var pageName = \'\'; var pageSlug =\'\';')
                         .(($editorPage->getPage()->requiresId() == false or ($editorPage->getPage()->requiresId() == true && $editorPage->getPageId() != 0)) ?
                         'var pageTitle = document.getElementById(\'page_title\').value;
                         var metaKeys  = document.getElementById(\'page_meta_keys\').value;
@@ -421,15 +418,15 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
     {
         $session = DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session;
         $session->put('innomedia_lang_for_edit_context', $lang);
-        
+
         $objResponse = new XajaxResponse();
-        
+
         $sScript = "
             function refreshWuiImpagemanager()
             {
                 promise = refreshForLanguage();
             }
-            function refreshForLanguage()  
+            function refreshForLanguage()
             {
                 d = new $.Deferred();
                 setTimeout('xajax_WuiImpagemanagerLoadPage(\"$module\", \"$page\", \"$pageid\");d.resolve()',0);
@@ -657,7 +654,7 @@ class WuiImpagemanager extends \Shared\Wui\WuiWidget
 
         $sScript = "$('select#page').val('$module/$page').trigger('change');";
         $objResponse->addScript($sScript);
-        
+
         $objResponse->addAssign("wui_impagemanager", "innerHTML", '');
 
         return $objResponse;
