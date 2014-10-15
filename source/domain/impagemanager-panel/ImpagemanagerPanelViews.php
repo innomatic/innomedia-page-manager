@@ -132,40 +132,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         ksort($pagesComboList);
         $firstPage = key($pagesComboList);
         list($module, $page) = explode('/', $firstPage);
-
-        $this->pageXml = '<vertgroup><children>
-            <horizgroup><args><width>0%</width></args><children>
-            <label><args><label>'.WuiXml::cdata($this->localeCatalog->getStr('content_type_label')).'</label></args></label>
-            <combobox><args><id>pagetype</id><elements type="array">'.WuiXml::encode($pagesComboList).'</elements></args>
-            </combobox>
-
-             <button>
-                <args>
-                  <horiz>true</horiz>
-                  <frame>false</frame>
-                  <themeimage>mathadd</themeimage>
-                  <label>'.$this->localeCatalog->getStr('addcontent_button').'</label>
-                  <action>javascript:void(0)</action>
-                </args>
-                  <events>
-                  <click>
-                  var page = document.getElementById(\'pagetype\');
-                  var pagevalue = page.options[page.selectedIndex].value;
-                  var elements = pagevalue.split(\'/\');
-                  xajax_AddContent(elements[0], elements[1], '.$eventData['parentid'].')</click>
-                  </events>
-              </button>
-
-           </children></horizgroup>
-            <horizbar/>
-            <divframe><name>pageeditor</name>
-              <args><id>pageeditor</id></args>
-              <children><void/>
-              </children>
-            </divframe>
-            <impagemanager>
-              </impagemanager>
-            </children></vertgroup>';
+        
+        $this->tpl->set('contentTypeLabel', $this->localeCatalog->getStr('content_type_label'));
+        $this->tpl->set('pagesComboList', $pagesComboList);
+        $this->tpl->set('addContentLabel', $this->localeCatalog->getStr('addcontent_button'));
+        $this->tpl->set('parentId', $eventData['parentid']);
     }
 
     /**
