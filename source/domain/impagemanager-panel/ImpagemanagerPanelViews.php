@@ -348,6 +348,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
 
+        $wuiTheme = \Innomatic\Wui\WUI::instance('\Innomatic\Wui\WUI')->getTheme();
+ 
         $this->pageXml = '
 <vertgroup>
   <children>
@@ -361,13 +363,31 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             <width>0%</width>
           </args>
           <children>
-            <link>
+            <horizgroup>
               <args>
-                <label>'.WuiXml::cdata($this->localeCatalog->getStr('home_label')).'</label>
-                <bold>true</bold>
-                <link>'.WuiXml::cdata($homeAction).'</link>
+                <width>0%</width>
+                <align>middle</align>
               </args>
-            </link>
+              <children>
+
+                <image>
+                  <args>
+                    <width>18</width>
+                    <height>18</height>
+                    <imageurl>'.$wuiTheme->mIconsBase . $wuiTheme->mIconsSet['icons']['home']['base'] . '/icons/' . $wuiTheme->mIconsSet['icons']['home']['file'].'</imageurl>
+                    <link>'.WuiXml::cdata($homeAction).'</link>
+                  </args>
+                </image>
+                <link>
+                  <args>
+                    <label>'.WuiXml::cdata($this->localeCatalog->getStr('home_label')).'</label>
+                    <bold>true</bold>
+                    <link>'.WuiXml::cdata($homeAction).'</link>
+                  </args>
+                </link>
+
+              </children>
+            </horizgroup>
             <treevmenu><args><menu type="array">'.WuiXml::encode($tree_menu).'</menu></args></treevmenu>
           </children>
         </vertgroup>
