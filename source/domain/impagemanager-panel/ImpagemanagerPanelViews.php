@@ -257,11 +257,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         // Action for deleting a page.
         //
-        $deleteAction = WuiEventsCall::buildEventsCallString(
-            '',
-            [ [ 'view', 'default', ['parentid' => 0] ],
-            [ 'action', 'deletecontent', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId] ] ]
-        );
+        if ($isContentPage == true) {
+            $deleteAction = WuiEventsCall::buildEventsCallString(
+                '',
+                [ [ 'view', 'default', ['parentid' => 0] ],
+                [ 'action', 'deletecontent', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId] ] ]
+            );
+        }
         
         // Action for adding a child page.
         //
