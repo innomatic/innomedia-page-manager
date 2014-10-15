@@ -120,22 +120,31 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
     public function viewDefault($eventData)
     {
+        // --------------------------------------------------------------------
+        // INITIALIZATION
+        // --------------------------------------------------------------------
+
         $isContentPage = false;
         $isModule      = false;
         $isStaticPage  = false;
-
+        $isHomePage    = false;
+        
+        // Set default parent id to the root page if not set.
+        //
         if (!isset($eventData['parentid'])) {
             $parentId = '0';
         } else {
             $parentId = $eventData['parentid'];
         }
 
-        // Check if the given parent is a content page, a static page or a module name.
+        // Check if the given parent is a content page, a static page or
+        // a module name.
         //
         if ($parentId == '0') {
-            // This is a static page (module + page).
+            // This is a static page (home/index).
             //
             $isStaticPage = true;
+            $isHomePage   = true;
         } elseif (!is_numeric($parentId)) {
             if (substr($parentId, 0, strlen('module_')) == 'module_') {
                 // This is a module name.
@@ -152,6 +161,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $isContentPage = true;
         }
 
+        // --------------------------------------------------------------------
+        // PAGE TREE
+        // --------------------------------------------------------------------
+
+        // Action for going to the home page.
+        //
+        $homeAction = WuiEventsCall::buildEventsCallString(
+            '', [['view', 'default', ['parentid' => 0]]]
+        );
+        
         // Extract all the pages with a node in the page tree path.
         //
         $parents_query = $this->dataAccess->execute(
@@ -174,7 +193,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             list($module, $page) = explode('/', $staticPage);
 
             if ($module == 'home' && $page != 'index') {
-                // Put home pages under home root node, excluding the index page.
+                // Put home module pages under home root node, excluding the index page.
                 //
                 $nodes['page_'.$module.'_'.$page] = 0;
                 $pages['page_'.$module.'_'.$page] = ucfirst($page);
@@ -229,25 +248,56 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         //
         $tree_menu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
 
-        // Action for going to the home page.
+        // --------------------------------------------------------------------
+        // PAGE DETAILS AND ACTIONS
+        // --------------------------------------------------------------------
+
+        // Set page name and title.
         //
-        $homeAction = WuiEventsCall::buildEventsCallString(
-            '', [['view', 'default', ['parentid' => 0]]]
-        );
+        if ($isContentPage == true) {
+            // Content page case.
+            //
+            $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
+            $page = new \Innomedia\Page($pageInfo['module'], $pageInfo['page'], $parentId);
+            $page->parsePage();
+            $pageName = $page->getName();
+            $pageType = ucfirst($pageInfo['module']).'/'.ucfirst($pageInfo['page']);
+            
+            $pageNameString = $pageName.' ('.$pageType.')';
+        } elseif ($isHomePage == true) {
+            // Home page case.
+            //
+            $pageNameString = 'Home / Index';
+        } elseif ($isStaticPage == true) {
+            // Static page case.
+            //
+            list(, $module, $page) = explode('_', $parentId);
+            $pageNameString = ucfirst($module).' / '.ucfirst($page);
+        } elseif ($isModule == true) {
+            // Module case.
+            //
+            $pageNameString = ucfirst(substr($parentId, strlen('module_')));
+        }
 
         // Action for editing the current page.
         // Not available when opening a module.
         //
-        if ($parentId == '0') {
+        if ($isHomePage == true) {
+            // Home page case.
+            //
             $editAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'page', ['module' => 'home', 'page' => 'index', 'pageid' => 0]]]
             );
-        } elseif (is_numeric($parentId)) {
+        } elseif ($isContentPage == true) {
+            // Content page case.
+            //
             $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
             $editAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'page', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId]]]
             );
         } elseif ($isStaticPage == true) {
+            // Static page case.
+            //
             list(, $module, $page) = explode('_', $parentId);
 
             $editAction = WuiEventsCall::buildEventsCallString(
@@ -255,23 +305,25 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             );
         }
 
-        // Action for deleting a page.
-        //
         if ($isContentPage == true) {
+            // Action for deleting a page.
+            //
             $deleteAction = WuiEventsCall::buildEventsCallString(
                 '',
                 [ [ 'view', 'default', ['parentid' => 0] ],
                 [ 'action', 'deletecontent', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId] ] ]
             );
-        }
         
-        // Action for adding a child page.
-        //
-        if (is_numeric($parentId)) {
+            // Action for adding a child page.
+            //
             $addAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'addcontent', ['parentid' => $parentId]]]
             );
         }
+
+        // --------------------------------------------------------------------
+        // PAGE CHILDREN LIST
+        // --------------------------------------------------------------------
 
         // Build the children pages table.
         //
@@ -325,7 +377,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             }
         }
 
-        if ($parentId == '0') {
+        if ($isHomePage == true) {
             // When the current parent node is the home page, also add home
             // static pages (excluding the index) and the other modules.
             //
@@ -347,7 +399,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     //$pages['page_' . $module . '_' . $page] = ucfirst($page);
                 } elseif ($staticPage == 'home/index') {
                     // Skip the home/index page
-                } elseif(!isset($listedModules[$module])) {
+                } elseif (!isset($listedModules[$module])) {
                     // Create a node for each other module.
                     //
                     $pageChildren[] = [
@@ -365,7 +417,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         // Check if there are pages with no tree path (for compatibility with
         // old content pages).
         //
-        if (is_numeric($parentId) && $parentId == '0') {
+        if ($isHomePage == true) {
             // Extract all the pages without a page tree path.
             //
             $orphanPagesQuery = $this->dataAccess->execute(
@@ -409,26 +461,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         uasort($pageChildren, function($a, $b) {
             return strcasecmp($a['name'], $b['name']);
         });
-
-        // Set page name and title.
-        //
-        if ($isContentPage == true) {
-            $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
-            $page = new \Innomedia\Page($pageInfo['module'], $pageInfo['page'], $parentId);
-            $page->parsePage();
-            $pageName = $page->getName();
-            $pageType = ucfirst($pageInfo['module']).'/'.ucfirst($pageInfo['page']);
-            
-            $pageNameString = $pageName.' ('.$pageType.')';
-        } elseif ($isStaticPage == true && $parentId == '0') {
-            $pageNameString = 'Home / Index';
-        } elseif ($isStaticPage == true) {
-            list(, $module, $page) = explode('_', $parentId);
-            $pageNameString = ucfirst($module).' / '.ucfirst($page);
-        } elseif ($isModule == true) {
-            $pageNameString = ucfirst(substr($parentId, strlen('module_')));
-        }
         
+        // Build children pages table headers.
+        //
         $tableHeaders = [];
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
@@ -542,13 +577,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
               </children>
             </horizgroup>';
 
-            if (!$isStaticPage or $parentId == '0') {
+            if (!$isStaticPage or $isHomePage == true) {
                 $this->pageXml .= '
             <horizbar />';
             }
         }
 
-        if (!$isStaticPage or $parentId == '0') {
+        if (!$isStaticPage or $isHomePage == true) {
             $this->pageXml .= '
 
             <!-- Page children -->
@@ -558,11 +593,10 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 <label>'.WuiXml::cdata($this->localeCatalog->getStr('children_content_label')).'</label>
                 <bold>true</bold>
               </args>
-            </label>
-';
+            </label>';
 
-        if (is_numeric($parentId)) {
-            $this->pageXml .= '
+            if ($isContentPage == true) {
+                $this->pageXml .= '
             <horizgroup>
               <children>
 
@@ -578,7 +612,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
               </children>
             </horizgroup>';
-        }
+            }
 
             if ($childrenCount == 0) {
             $this->pageXml .= '
@@ -616,7 +650,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                       </args>
                     </label>';
 
-                    if ($isContentPage == true or $parentId == '0') {
+                    if ($isContentPage == true or $isHomePage == true) {
                         // Prepare WUI events calls for panel actions.
                         //
                         $editAction  = WuiEventsCall::buildEventsCallString(
@@ -666,7 +700,6 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
     </horizgroup>
   </children>
 </vertgroup>';
-
     }
 
     public function viewPage($eventData)
