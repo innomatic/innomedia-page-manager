@@ -83,19 +83,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $this->pageTitle = $this->localeCatalog->getStr('content_title');
         }
 
-        if (is_object($this->wuiPanelContent)) {
-            $xmlObject = $this->wuiPanelContent;
-        } else {
-            $xmlObject = new WuiXml('content', array('definition' => $this->pageXml));
-        }
-
         $this->wuiContainer->addChild(
             new WuiInnomaticPage(
                 'page',
                 array(
                     'pagetitle'   => $this->pageTitle,
                     'icon'        => $this->icon,
-                    'maincontent' => $xmlObject,
+                    'maincontent' => $this->wuiPanelContent,
                     'status'      => $this->status,
                     'toolbars'    => array(
                         new WuiInnomaticToolbar(
