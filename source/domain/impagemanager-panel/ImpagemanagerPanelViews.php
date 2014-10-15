@@ -354,13 +354,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 <vertgroup>
   <children>
     <horizgroup>
+          <args>
+            <width>0%</width>
+          </args>
       <children>
 
         <!-- Content tree -->
 
         <vertgroup>
           <args>
-            <width>0%</width>
+            <width>200</width>
           </args>
           <children>
             <horizgroup>
