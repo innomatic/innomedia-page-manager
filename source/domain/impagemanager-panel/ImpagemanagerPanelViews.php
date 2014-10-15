@@ -325,6 +325,43 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             }
         }
 
+        if ($parentId == '0') {
+            // When the current parent node is the home page, also add home
+            // static pages (excluding the index) and the other modules.
+            //
+            $listedModules = [];
+            foreach ($staticPages as $staticPage) {
+                list ($module, $page) = explode('/', $staticPage);
+                
+                if ($module == 'home' && $page != 'index') {
+                    // Put home pages under home root node, excluding the index page.
+                    //
+                    $pageChildren[] = [
+                        'id'     => 'page_'.$module.'_'.$page,
+                        'name'   => ucfirst($page),
+                        'module' => $module,
+                        'page'   => $page
+                    ];
+                    $childrenCount++;
+                    //$nodes['page_' . $module . '_' . $page] = 0;
+                    //$pages['page_' . $module . '_' . $page] = ucfirst($page);
+                } elseif ($staticPage == 'home/index') {
+                    // Skip the home/index page
+                } elseif(!isset($listedModules[$module])) {
+                    // Create a node for each other module.
+                    //
+                    $pageChildren[] = [
+                        'id'     => 'module_'.$module,
+                        'name'   => ucfirst($module),
+                        'module' => '',
+                        'page'   => '' 
+                    ];
+                    $childrenCount++;
+                    $listedModules[$module] = true;
+                }
+            }
+        }
+
         // Check if there are pages with no tree path (for compatibility with
         // old content pages).
         //
@@ -565,6 +602,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         '', [['view', 'default', ['parentid' => $page['id']]]]
                     );
 
+                    $childType = (strlen($page['module']) && strlen($page['page'])) ? ucfirst($page['module']).' / '.ucfirst($page['page']) : '';
                     $this->pageXml .= '
                     <link row="'.$tableRow.'" col="0">
                       <args>
@@ -574,15 +612,21 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     </link>
                     <label row="'.$tableRow.'" col="1">
                       <args>
-                        <label>'.WuiXml::cdata(ucfirst($page['module'].' / '.ucfirst($page['page']))).'</label>
+                        <label>'.WuiXml::cdata($childType).'</label>
                       </args>
                     </label>';
 
                     if ($isContentPage == true or $parentId == '0') {
                         // Prepare WUI events calls for panel actions.
                         //
-                        $editAction  = WuiEventsCall::buildEventsCallString('', [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]);
-                        $deleteAction = WuiEventsCall::buildEventsCallString('', [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]);
+                        $editAction  = WuiEventsCall::buildEventsCallString(
+                            '',
+                            [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
+                        );
+                        $deleteAction = WuiEventsCall::buildEventsCallString(
+                            '',
+                            [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
+                        );
 
                         $this->pageXml .= '
     <innomatictoolbar row="'.$tableRow.'" col="2">
