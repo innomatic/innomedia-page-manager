@@ -492,6 +492,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <horiz>true</horiz>
                   <frame>false</frame>
                   <themeimage>trash</themeimage>
+                  <dangeraction>true</dangeraction>
                   <label>'.$this->localeCatalog->getStr('delete_item_button').'</label>
                   <needconfirm>true</needconfirm>
                   <confirmmessage>'.$this->localeCatalog->getStr('delete_confirm_message').'</confirmmessage>
