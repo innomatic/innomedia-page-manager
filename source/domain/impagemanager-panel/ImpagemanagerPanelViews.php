@@ -195,7 +195,16 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         //
         while (!$parents_query->eof) {
             $nodes[$parents_query->getFields('id')] = $parents_query->getFields('parent_id');
-            $pages[$parents_query->getFields('id')] = $parents_query->getFields('name');
+            if ($parents_query->getFields('name') == '') {
+                // If the page has no valid name, default to its internal id number.
+                //
+                $name =  $parents_query->getFields('id');
+            } else {
+                // The page has a valid name string.
+                //
+                $name = $parents_query->getFields('name'); 
+            }
+            $pages[$parents_query->getFields('id')] = $name;
             $parents_query->moveNext();
         }
 
