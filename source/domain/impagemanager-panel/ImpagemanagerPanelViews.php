@@ -406,7 +406,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         if ($isModule == false) {
             $this->pageXml .= '
 
-            <!-- Page preview -->
+            <!-- Page details -->
 
             <label>
               <args>
