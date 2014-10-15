@@ -27,12 +27,35 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
     {
     }
 
-    public static function ajaxAddContent($module, $page)
+    /* public executeDeletecontent($eventData) {{{ */
+    /**
+     * Action for deleting a content.
+     *
+     * Used by the page children list.
+     *
+     * @param array $eventData WUI event data.
+     * @access public
+     * @return void
+     */
+    public function executeDeletecontent($eventData)
+    {
+        $editorPage = new \Innomedia\Cms\Page(
+            DesktopFrontController::instance('\Innomatic\Desktop\Controller\DesktopFrontController')->session,
+            $eventData['module'],
+            $eventData['page'],
+            $eventData['pageid']
+        );
+        $editorPage->parsePage();
+        $editorPage->deletePage();
+    }
+    /* }}} */
+
+    public static function ajaxAddContent($module, $page, $parentId)
     {
         $pageid = 0;
         $scope_page = 'backend';
         $contentPage = new \Innomedia\Page($module, $page, $pageid, $scope_page);
-        $contentPage->addContent();
+        $contentPage->addContent($parentId);
         $xml = '<vertgroup><children>
             <horizbar />
             <impagemanager>
@@ -100,71 +123,4 @@ class ImpagemanagerPanelActions extends \Innomatic\Desktop\Panel\PanelActions
 
         return $objResponse;
     }
-
-    public static function ajaxSaveGlobalParameters($parameters)
-    {
-        $decodedParams = array();
-        foreach (explode('&', $parameters) as $chunk) {
-            $param = explode("=", $chunk);
-
-            if ($param) {
-                $moduleName = $blockName = '';
-
-                $keys = explode('_', urldecode($param[0]));
-                if (count($keys) < 4) {
-                    // Key is not valid
-                    continue;
-                }
-
-                $moduleName = array_shift($keys);
-                $blockName = array_shift($keys);
-                $blockCounter = array_shift($keys);
-                $paramName = implode('_', $keys);
-                $decodedParams[$moduleName][$blockName][$blockCounter][$paramName] = urldecode($param[1]);
-            }
-        }
-
-        $context = \Innomedia\Context::instance('\Innomedia\Context');
-        $modulesList = $context->getModulesList();
-
-        foreach ($modulesList as $module) {
-            $moduleObj = new \Innomedia\Module($module);
-            $moduleBlocks = $moduleObj->getBlocksList();
-            foreach ($moduleBlocks as $block) {
-                $scopes = \Innomedia\Block::getScopes($context, $module, $block);
-                if (in_array('global', $scopes)) {
-                    $fqcn = \Innomedia\Block::getClass($context, $module, $block);
-                    if (class_exists($fqcn)) {
-                        if ($fqcn::hasBlockManager()) {
-                            $hasBlockManager = true;
-                            $headers['0']['label'] = ucfirst($module).': '.ucfirst($block);
-                            $managerClass = $fqcn::getBlockManager();
-                            if (class_exists($managerClass)) {
-                                $manager = new $managerClass('', 1, 0);
-                                $manager->saveBlock($decodedParams[$module][$block][1]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        $xml = \ImpagemanagerPanelController::getGlobalParametersXml();
-
-        $objResponse = new XajaxResponse();
-        $objResponse->addAssign("global_parameters", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('contentlist', $xml));
-
-        return $objResponse;
-    }
-
-    public static function ajaxRevertGlobalParameters()
-    {
-        $xml = \ImpagemanagerPanelController::getGlobalParametersXml();
-
-        $objResponse = new XajaxResponse();
-        $objResponse->addAssign("global_parameters", "innerHTML", \Shared\Wui\WuiXml::getContentFromXml('contentlist', $xml));
-
-        return $objResponse;
-    }
-
 }
