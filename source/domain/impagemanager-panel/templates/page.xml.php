@@ -1,0 +1,11 @@
+<vertgroup>
+  <children>
+    <impagemanager>
+      <args>
+        <module><?=$module?></module>
+        <page><?=$page?></page>
+        <pageid><?=$pageId?></pageid>
+      </args>
+    </impagemanager>
+  </children>
+</vertgroup>

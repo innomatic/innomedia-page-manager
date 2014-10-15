@@ -578,17 +578,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
      */
     public function viewPage($eventData)
     {
-        $module  = $eventData['module'];
-        $page    = $eventData['page'];
-        $pageId  = isset($eventData['pageid']) ? $eventData['pageid'] : 0;
-
-        $this->pageXml = '<vertgroup>
-            <children>
-            <impagemanager>
-              <args><module>'.WuiXml::cdata($module).'</module><page>'.WuiXml::cdata($page).'</page><pageid>'.$pageId.'</pageid></args>
-            </impagemanager>
-            </children>
-            </vertgroup>';
+        $this->tpl->set('module', $eventData['module']);
+        $this->tpl->set('page', $eventData['page']);
+        $this->tpl->set('pageId', isset($eventData['pageid']) ? $eventData['pageid'] : 0);
     }
 
     /**
