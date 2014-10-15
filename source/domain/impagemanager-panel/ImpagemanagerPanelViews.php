@@ -130,15 +130,25 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $parentId = $eventData['parentid'];
         }
 
+        // Check if the given parent is a content page, a static page or a module name.
+        //
         if ($parentId == '0') {
+            // This is a static page (module + page).
+            //
             $isStaticPage = true;
         } elseif (!is_numeric($parentId)) {
             if (substr($parentId, 0, strlen('module_')) == 'module_') {
+                // This is a module name.
+                //
                 $isModule = true;
             } elseif (substr($parentId, 0, strlen('page_')) == 'page_') {
+                // This is a static page (module + page).
+                //
                 $isStaticPage = true;
             }
         } else {
+            // This is a content page.
+            //
             $isContentPage = true;
         }
 
@@ -325,7 +335,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             while (!$orphanPagesQuery->eof) {
                 $orphanPageData = $orphanPagesQuery->getFields();
 
-                // Exlude static pages with saved page parameters.
+                // Exclude static pages with saved page parameters.
                 //
                 if (!in_array($orphanPageData['page'], $staticPages)) {
                     list ($module, $page) = explode('/', $orphanPageData['page']);
