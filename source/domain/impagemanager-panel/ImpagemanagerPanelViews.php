@@ -83,13 +83,19 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $this->pageTitle = $this->localeCatalog->getStr('content_title');
         }
 
+        if (is_object($this->wuiPanelContent)) {
+            $xmlObject = $this->wuiPanelContent;
+        } else {
+            $xmlObject = new WuiXml('content', array('definition' => $this->pageXml));
+        }
+
         $this->wuiContainer->addChild(
             new WuiInnomaticPage(
                 'page',
                 array(
                     'pagetitle'   => $this->pageTitle,
                     'icon'        => $this->icon,
-                    'maincontent' => new WuiXml('content', array('definition' => $this->pageXml)),
+                    'maincontent' => $xmlObject,
                     'status'      => $this->status,
                     'toolbars'    => array(
                         new WuiInnomaticToolbar(
@@ -177,7 +183,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $isModule      = false;
         $isStaticPage  = false;
         $isHomePage    = false;
-        
+
         // Set default parent id to the root page if not set.
         //
         if (!isset($eventData['parentid'])) {
@@ -210,6 +216,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $isContentPage = true;
         }
 
+        $this->tpl->set('isModule',      $isModule      ? '1' : '0');
+        $this->tpl->set('isContentPage', $isContentPage ? '1' : '0');
+        $this->tpl->set('isStaticPage',  $isStaticPage  ? '1' : '0');
+        $this->tpl->set('isHomePage',    $isHomePage    ? '1' : '0');
+        
         // --------------------------------------------------------------------
         // PAGE TREE
         // --------------------------------------------------------------------
@@ -295,7 +306,14 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         // Build the tree menu structure for the WUI widget.
         //
-        $tree_menu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
+        $treeMenu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
+
+        $this->tpl->set('treeMenu',   $treeMenu);
+        $this->tpl->set('homeAction', $homeAction);
+        $this->tpl->set('homeLabel',  $this->localeCatalog->getStr('home_label'));
+
+        $wuiTheme = \Innomatic\Wui\WUI::instance('\Innomatic\Wui\WUI')->getTheme();
+        $this->tpl->set('homeImageUrl', $wuiTheme->mIconsBase . $wuiTheme->mIconsSet['icons']['home']['base'] . '/icons/' . $wuiTheme->mIconsSet['icons']['home']['file']);
 
         // --------------------------------------------------------------------
         // PAGE DETAILS AND ACTIONS
@@ -328,6 +346,8 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $pageNameString = ucfirst(substr($parentId, strlen('module_')));
         }
 
+        $this->tpl->set('pageNameString', $pageNameString);
+
         // Action for editing the current page.
         // Not available when opening a module.
         //
@@ -354,6 +374,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             );
         }
 
+        $this->tpl->set('editContentLabel', $this->localeCatalog->getStr('editcontent_button'));
+        $this->tpl->set('editAction',       $editAction);
+
         if ($isContentPage == true) {
             // Action for deleting a page.
             //
@@ -362,17 +385,29 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                 [ [ 'view', 'default', ['parentid' => 0] ],
                 [ 'action', 'deletecontent', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId] ] ]
             );
-        
+
+            $this->tpl->set('deleteAction', $deleteAction);
+        }
+
+        $this->tpl->set('deleteItemLabel',      $this->localeCatalog->getStr('delete_item_button'));
+        $this->tpl->set('deleteConfirmMessage', $this->localeCatalog->getStr('delete_confirm_message'));
+
+        // --------------------------------------------------------------------
+        // PAGE CHILDREN LIST
+        // --------------------------------------------------------------------
+
+        // Add content button.
+        //
+        if ($isContentPage == true) {
             // Action for adding a child page.
             //
             $addAction = WuiEventsCall::buildEventsCallString(
                 '', [['view', 'addcontent', ['parentid' => $parentId]]]
             );
-        }
 
-        // --------------------------------------------------------------------
-        // PAGE CHILDREN LIST
-        // --------------------------------------------------------------------
+            $this->tpl->set('newContentLabel', $this->localeCatalog->getStr('newcontent_button'));
+            $this->tpl->set('addAction',       $addAction);
+        }
 
         // Build the children pages table.
         //
@@ -444,10 +479,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                         'page'   => $page
                     ];
                     $childrenCount++;
-                    //$nodes['page_' . $module . '_' . $page] = 0;
-                    //$pages['page_' . $module . '_' . $page] = ucfirst($page);
                 } elseif ($staticPage == 'home/index') {
-                    // Skip the home/index page
+                    // Skip the home/index page.
+                    //
                 } elseif (!isset($listedModules[$module])) {
                     // Create a node for each other module.
                     //
@@ -505,11 +539,57 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $orphanPagesQuery->free();
         }
 
+        $deleteItemLabel      = $this->localeCatalog->getStr('delete_item_button');
+        $editItemLabel        = $this->localeCatalog->getStr('edit_item_button');
+        $deleteConfirmMessage = $this->localeCatalog->getStr('delete_confirm_message');
+
+        $this->tpl->set('editItemLabel', $this->localeCatalog->getStr('edit_item_button'));
+
+        foreach ($pageChildren as $id => $page) {
+            $pageChildren[$id]['viewaction'] = WuiEventsCall::buildEventsCallString(
+                '', [['view', 'default', ['parentid' => $page['id']]]]
+            );
+
+            $pageChildren[$id]['type'] = (strlen($page['module']) && strlen($page['page'])) ? ucfirst($page['module']).' / '.ucfirst($page['page']) : '';
+            
+            if ($isContentPage == true or $isHomePage == true) {
+                $editAction  = WuiEventsCall::buildEventsCallString(
+                    '',
+                    [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
+                );
+                $deleteAction = WuiEventsCall::buildEventsCallString(
+                    '',
+                    [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
+                );
+                
+                $pageChildren[$id]['toolbars'] = [
+                    'view' => [
+                        'edit' => [
+                            'label' => $editItemLabel,
+                            'themeimage' => 'pencil',
+                            'horiz' => 'true',
+                            'action' => $editAction],
+                        'delete' => [
+                            'label' => $deleteItemLabel,
+                            'needconfirm' => 'true',
+                            'confirmmessage' => $deleteConfirmMessage,
+                            'themeimage' => 'trash',
+                            'horiz' => 'true',
+                            'action' => $deleteAction]
+                    ]];
+            }
+        }
+
         // Sort page children.
         //
         uasort($pageChildren, function($a, $b) {
             return strcasecmp($a['name'], $b['name']);
         });
+
+        $this->tpl->set('childrenCount',        $childrenCount);
+        $this->tpl->set('childrenContentLabel', $this->localeCatalog->getStr('children_content_label'));
+        $this->tpl->setArray('pageChildren',    $pageChildren);
+        $this->tpl->set('noChildrenLabel',      $this->localeCatalog->getStr('no_children_label'));
         
         // Build children pages table headers.
         //
@@ -517,238 +597,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
 
-        $wuiTheme = \Innomatic\Wui\WUI::instance('\Innomatic\Wui\WUI')->getTheme();
- 
-        $this->pageXml = '
-<vertgroup>
-  <children>
-    <horizgroup>
-          <args>
-            <width>0%</width>
-          </args>
-      <children>
-
-        <!-- Content tree -->
-
-        <vertgroup>
-          <args>
-            <width>200</width>
-          </args>
-          <children>
-            <horizgroup>
-              <args>
-                <width>0%</width>
-                <align>middle</align>
-              </args>
-              <children>
-
-                <image>
-                  <args>
-                    <width>18</width>
-                    <height>18</height>
-                    <imageurl>'.$wuiTheme->mIconsBase . $wuiTheme->mIconsSet['icons']['home']['base'] . '/icons/' . $wuiTheme->mIconsSet['icons']['home']['file'].'</imageurl>
-                    <link>'.WuiXml::cdata($homeAction).'</link>
-                  </args>
-                </image>
-                <link>
-                  <args>
-                    <label>'.WuiXml::cdata($this->localeCatalog->getStr('home_label')).'</label>
-                    <bold>true</bold>
-                    <link>'.WuiXml::cdata($homeAction).'</link>
-                  </args>
-                </link>
-
-              </children>
-            </horizgroup>
-            <treevmenu><args><menu type="array">'.WuiXml::encode($tree_menu).'</menu></args></treevmenu>
-          </children>
-        </vertgroup>
-
-        <vertbar />
-
-        <vertgroup>
-      <args>
-        <width>100%</width>
-      </args>
-          <children>
-
-            <!-- Page details -->
-
-            <label>
-              <args>
-                <!--
-                <label>'.WuiXml::cdata($this->localeCatalog->getStr('preview_content_label')).'</label>
-                    -->
-                <label>'.WuiXml::cdata($pageNameString).'</label>
-                <bold>true</bold>
-              </args>
-            </label>
-                ';
-
-        if ($isModule == false) {
-            $this->pageXml .= '
-            <horizgroup>
-              <args>
-                <width>0%</width>
-              </args>
-              <children>';
-
-        if ($isModule == false) {
-            $this->pageXml .= '
-             <button>
-                <args>
-                  <horiz>true</horiz>
-                  <frame>false</frame>
-                  <themeimage>pencil</themeimage>
-                  <label>'.$this->localeCatalog->getStr('editcontent_button').'</label>
-                  <action>'.WuiXml::cdata($editAction).'</action>
-                </args>
-              </button>';
-        }
-
-        if ($isContentPage == true) {
-            $this->pageXml .= '
-             <button>
-                <args>
-                  <horiz>true</horiz>
-                  <frame>false</frame>
-                  <themeimage>trash</themeimage>
-                  <dangeraction>true</dangeraction>
-                  <label>'.$this->localeCatalog->getStr('delete_item_button').'</label>
-                  <needconfirm>true</needconfirm>
-                  <confirmmessage>'.$this->localeCatalog->getStr('delete_confirm_message').'</confirmmessage>
-                  <action>'.WuiXml::cdata($deleteAction).'</action>
-                </args>
-              </button>';
-        }
-
-        $this->pageXml .= '
-              </children>
-            </horizgroup>';
-
-            if (!$isStaticPage or $isHomePage == true) {
-                $this->pageXml .= '
-            <horizbar />';
-            }
-        }
-
-        if (!$isStaticPage or $isHomePage == true) {
-            $this->pageXml .= '
-
-            <!-- Page children -->
-
-            <label>
-              <args>
-                <label>'.WuiXml::cdata($this->localeCatalog->getStr('children_content_label')).'</label>
-                <bold>true</bold>
-              </args>
-            </label>';
-
-            if ($isContentPage == true) {
-                $this->pageXml .= '
-            <horizgroup>
-              <children>
-
-             <button>
-                <args>
-                  <horiz>true</horiz>
-                  <frame>false</frame>
-                  <themeimage>mathadd</themeimage>
-                  <label>'.$this->localeCatalog->getStr('newcontent_button').'</label>
-                  <action>'.WuiXml::cdata($addAction).'</action>
-                </args>
-              </button>
-
-              </children>
-            </horizgroup>';
-            }
-
-            if ($childrenCount == 0) {
-            $this->pageXml .= '
-            <label>
-              <args>
-                <label>'.WuiXml::cdata($this->localeCatalog->getStr('no_children_label')).'</label>
-              </args>
-            </label>';
-            } else {
-                $this->pageXml .= '
-                <table>
-                  <args>
-                    <headers type="array">'.WuiXml::encode($tableHeaders).'</headers>
-                    <width>100%</width>
-                  </args>
-                  <children>';
-
-                $tableRow = 0;
-                foreach ($pageChildren as $page) {
-                    $childViewAction = WuiEventsCall::buildEventsCallString(
-                        '', [['view', 'default', ['parentid' => $page['id']]]]
-                    );
-
-                    $childType = (strlen($page['module']) && strlen($page['page'])) ? ucfirst($page['module']).' / '.ucfirst($page['page']) : '';
-                    $this->pageXml .= '
-                    <link row="'.$tableRow.'" col="0">
-                      <args>
-                        <label>'.WuiXml::cdata($page['name']).'</label>
-                        <link>'.WuiXml::cdata($childViewAction).'</link>
-                      </args>
-                    </link>
-                    <label row="'.$tableRow.'" col="1">
-                      <args>
-                        <label>'.WuiXml::cdata($childType).'</label>
-                      </args>
-                    </label>';
-
-                    if ($isContentPage == true or $isHomePage == true) {
-                        // Prepare WUI events calls for panel actions.
-                        //
-                        $editAction  = WuiEventsCall::buildEventsCallString(
-                            '',
-                            [ [ 'view', 'page', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
-                        );
-                        $deleteAction = WuiEventsCall::buildEventsCallString(
-                            '',
-                            [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
-                        );
-
-                        $this->pageXml .= '
-    <innomatictoolbar row="'.$tableRow.'" col="2">
-      <args>
-        <frame>false</frame>
-        <toolbars type="array">'.WuiXml::encode([
-            'view' => [
-                'edit' => [
-                    'label' => $this->localeCatalog->getStr('edit_item_button'),
-                    'themeimage' => 'pencil',
-                    'horiz' => 'true',
-                    'action' => $editAction],
-                'delete' => [
-                    'label' => $this->localeCatalog->getStr('delete_item_button'),
-                    'needconfirm' => 'true',
-                    'confirmmessage' => $this->localeCatalog->getStr('delete_confirm_message'),
-                    'themeimage' => 'trash',
-                    'horiz' => 'true',
-                    'action' => $deleteAction]
-            ]]).'</toolbars>
-      </args>
-    </innomatictoolbar>';
-                    }
-                    $tableRow++;
-                }
-                $this->pageXml .= '
-                  </children>
-                </table>';
-            }
-        }
-
-        $this->pageXml .= '
-          </children>
-        </vertgroup>
-
-      </children>
-    </horizgroup>
-  </children>
-</vertgroup>';
+        $this->tpl->set('tableHeaders', $tableHeaders);
     }
 
     /**
