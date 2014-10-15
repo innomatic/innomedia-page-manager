@@ -373,6 +373,25 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             return strcasecmp($a['name'], $b['name']);
         });
 
+        // Set page name and title.
+        //
+        if ($isContentPage == true) {
+            $pageInfo = \Innomedia\Page::getModulePageFromId($parentId);
+            $page = new \Innomedia\Page($pageInfo['module'], $pageInfo['page'], $parentId);
+            $page->parsePage();
+            $pageName = $page->getName();
+            $pageType = ucfirst($pageInfo['module']).'/'.ucfirst($pageInfo['page']);
+            
+            $pageNameString = $pageName.' ('.$pageType.')';
+        } elseif ($isStaticPage == true && $parentId == '0') {
+            $pageNameString = 'Home / Index';
+        } elseif ($isStaticPage == true) {
+            list(, $module, $page) = explode('_', $parentId);
+            $pageNameString = ucfirst($module).' / '.ucfirst($page);
+        } elseif ($isModule == true) {
+            $pageNameString = ucfirst(substr($parentId, strlen('module_')));
+        }
+        
         $tableHeaders = [];
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
@@ -430,20 +449,23 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
       <args>
         <width>100%</width>
       </args>
-          <children>';
-
-        if ($isModule == false) {
-            $this->pageXml .= '
+          <children>
 
             <!-- Page details -->
 
             <label>
               <args>
+                <!--
                 <label>'.WuiXml::cdata($this->localeCatalog->getStr('preview_content_label')).'</label>
+                    -->
+                <label>'.WuiXml::cdata($pageNameString).'</label>
                 <bold>true</bold>
               </args>
             </label>
+                ';
 
+        if ($isModule == false) {
+            $this->pageXml .= '
             <horizgroup>
               <args>
                 <width>0%</width>
