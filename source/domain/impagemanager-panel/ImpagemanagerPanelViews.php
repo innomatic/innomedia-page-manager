@@ -338,6 +338,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $orphanPagesQuery->free();
         }
 
+        // Sort page children.
+        //
+        uasort($pageChildren, function($a, $b) {
+            return strcasecmp($a['name'], $b['name']);
+        });
+
         $tableHeaders = [];
         $tableHeaders[0]['label'] = $this->localeCatalog->getStr('page_name_header');
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
@@ -550,7 +556,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             $dots .= '.';
         }
 
-        foreach ($catList[$id] as $data) {
+        $list = $catList[$id];
+        uasort($list, function($a, $b) {
+            return strcasecmp($a['title'], $b['title']);
+        });
+
+        foreach ($list as $data) {
             $editAction = WuiEventsCall::buildEventsCallString(
                 '',
                 [['view', 'default', ['parentid' => $data['id']]]]
