@@ -236,6 +236,14 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             );
         }
 
+        // Action for deleting a page.
+        //
+        $deleteAction = WuiEventsCall::buildEventsCallString(
+            '',
+            [ [ 'view', 'default', ['parentid' => 0] ],
+            [ 'action', 'deletecontent', ['module' => $pageInfo['module'], 'page' => $pageInfo['page'], 'pageid' => $parentId] ] ]
+        );
+        
         // Action for adding a child page.
         //
         if (is_numeric($parentId)) {
@@ -416,6 +424,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </label>
 
             <horizgroup>
+              <args>
+                <width>0%</width>
+              </args>
               <children>';
 
         if ($isModule == false) {
@@ -427,6 +438,21 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                   <themeimage>pencil</themeimage>
                   <label>'.$this->localeCatalog->getStr('editcontent_button').'</label>
                   <action>'.WuiXml::cdata($editAction).'</action>
+                </args>
+              </button>';
+        }
+
+        if ($isContentPage == true) {
+            $this->pageXml .= '
+             <button>
+                <args>
+                  <horiz>true</horiz>
+                  <frame>false</frame>
+                  <themeimage>trash</themeimage>
+                  <label>'.$this->localeCatalog->getStr('delete_item_button').'</label>
+                  <needconfirm>true</needconfirm>
+                  <confirmmessage>'.$this->localeCatalog->getStr('delete_confirm_message').'</confirmmessage>
+                  <action>'.WuiXml::cdata($deleteAction).'</action>
                 </args>
               </button>';
         }
