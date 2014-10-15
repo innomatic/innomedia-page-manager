@@ -8,17 +8,50 @@ use \Shared\Wui;
 
 class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 {
+    /**
+     * Innomatic container.
+     * 
+     * @var \Innomatic\Core\InnomaticContainer 
+     */
     protected $container;
+    /**
+     * Tenant data access.
+     * 
+     * @var \Innomatic\Dataaccess\DataAccess 
+     */
     protected $dataAccess;
+    /**
+     * Localization catalog for the current panel.
+     * 
+     * @var \Innomatic\Locale\LocaleCatalog 
+     */
     protected $localeCatalog;
+    /**
+     * Panel title.
+     * 
+     * @var string 
+     */
     protected $pageTitle;
+    /**
+     * XML definition for the current panel view.
+     * 
+     * @var string 
+     */
     protected $pageXml;
+    /**
+     * Panel status string.
+     * 
+     * @var string
+     */
     protected $status;
 
     public function update($observable, $arg = '')
     {
     }
 
+    /**
+     * Helper method for panel initialization.
+     */
     public function beginHelper()
     {
         $this->container = \Innomatic\Core\InnomaticContainer::instance('\Innomatic\Core\InnomaticContainer');
@@ -41,6 +74,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         );
     }
 
+    /**
+     * Helper method for panel initialization.
+     */
     public function endHelper()
     {
         if (!strlen($this->pageTitle)) {
@@ -69,6 +105,14 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         );
     }
 
+    /**
+     * Panel view for adding new content.
+     * 
+     * Parameters needed:
+     * -  parentid: name of the parent page.
+     * 
+     * @param array $eventData WUI event data.
+     */
     public function viewAddcontent($eventData)
     {
         $pagesList = \Innomedia\Page::getInstancePagesList();
@@ -118,6 +162,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </children></vertgroup>';
     }
 
+    /**
+     * Default view with page tree and current page details.
+     * 
+     * @param array $eventData WUI event data.
+     */
     public function viewDefault($eventData)
     {
         // --------------------------------------------------------------------
@@ -702,6 +751,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 </vertgroup>';
     }
 
+    /**
+     * View for editing a content page or a static page.
+     * 
+     * @param array $eventData WUI event data.
+     */
     public function viewPage($eventData)
     {
         $module  = $eventData['module'];
@@ -717,6 +771,15 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             </vertgroup>';
     }
 
+    /**
+     * Build the tree menu structure.
+     * 
+     * @param array $catList
+     * @param array $nodesList
+     * @param number $level
+     * @param number $id
+     * @return string A menu structure ready for the WuiTreevmenu widget.:w
+     */
     protected function buildTreeMenu($catList, $nodesList, $level = 1, $id = 0)
     {
         $menu = '';
