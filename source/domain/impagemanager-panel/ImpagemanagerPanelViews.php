@@ -527,21 +527,28 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
                     [ [ 'view', 'default', ['parentid' => $parentId] ], [ 'action', 'deletecontent', ['module' => $page['module'], 'page' => $page['page'], 'pageid' => $page['id']] ] ]
                 );
                 
-                $pageChildren[$id]['toolbars'] = [
-                    'view' => [
-                        'edit' => [
-                            'label' => $editItemLabel,
-                            'themeimage' => 'pencil',
-                            'horiz' => 'true',
-                            'action' => $editAction],
-                        'delete' => [
-                            'label' => $deleteItemLabel,
-                            'needconfirm' => 'true',
-                            'confirmmessage' => $deleteConfirmMessage,
-                            'themeimage' => 'trash',
-                            'horiz' => 'true',
-                            'action' => $deleteAction]
-                    ]];
+                if (substr($pageChildren[$id]['id'], 0, strlen('module_')) != 'module_') {
+                    $pageChildren[$id]['toolbars']['view']['edit'] = [
+                        'label' => $editItemLabel,
+                        'themeimage' => 'pencil',
+                        'horiz' => 'true',
+                        'action' => $editAction,
+                    ];
+                }
+                
+                
+                if (substr($pageChildren[$id]['id'], 0, strlen('module_')) != 'module_'
+                    && substr($pageChildren[$id]['id'], 0, strlen('page_')) != 'page_'
+                ) {
+                    $pageChildren[$id]['toolbars']['view']['delete'] = [
+                        'label' => $deleteItemLabel,
+                        'needconfirm' => 'true',
+                        'confirmmessage' => $deleteConfirmMessage,
+                        'themeimage' => 'trash',
+                        'horiz' => 'true',
+                        'action' => $deleteAction
+                    ];
+                }
             }
         }
 
