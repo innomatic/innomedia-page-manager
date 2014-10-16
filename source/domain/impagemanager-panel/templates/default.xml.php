@@ -115,7 +115,7 @@
               </args>
             </label>
 
-<?php if ($isContentPage == 1): ?>
+<?php if ($isContentPage == 1 || $isHomePage == 1): ?>
             <horizgroup>
               <children>
 

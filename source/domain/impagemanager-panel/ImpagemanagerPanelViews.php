@@ -363,7 +363,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         // Add content button.
         //
-        if ($isContentPage == true) {
+        if ($isContentPage == true || $isHomePage == truee) {
             // Action for adding a child page.
             //
             $addAction = WuiEventsCall::buildEventsCallString(
