@@ -38,7 +38,10 @@
 
               </children>
             </horizgroup>
+          
+<?php if (isset($treeMenu)): ?>
             <treevmenu><args><menu><?=$treeMenu;?></menu></args></treevmenu>
+<?php endif; ?>
           </children>
         </vertgroup>
 
