@@ -273,7 +273,9 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         //
         $treeMenu = $this->buildTreeMenu($tree_nodes, $tree_leafs);
 
-        $this->tpl->set('treeMenu',   $treeMenu);
+        if (strlen($treeMenu)) {
+            $this->tpl->set('treeMenu',   $treeMenu);
+        }
         $this->tpl->set('homeAction', $homeAction);
         $this->tpl->set('homeLabel',  $this->localeCatalog->getStr('home_label'));
 
