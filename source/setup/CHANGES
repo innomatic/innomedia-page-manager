@@ -1,6 +1,8 @@
 1.2.0
 ------------------
 CHANGES:
+- Add in WuiDropzone the field 'paramPrefix' used to create the parameter that will 
+  passed to the blockmanager's parameter management system (Amanda Accalai). 
 - Moved global parameters section to its own panel. (Alex Pagnoni)
 - Splitted content and static pages editing and moved static pages settings
   to the settings panel. (Alex Pagnoni)

@@ -36,7 +36,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $fileId       = $this->mArgs['fileid'];
         $maxFiles     = $this->mArgs['maxfiles'];
         $fieldName    = isset($this->mArgs['fieldname']) ? $this->mArgs['fieldname'] : '';
-        $paramPrefix    = isset($this->mArgs['paramprefix']) ? $this->mArgs['paramprefix'] : '';
+        $paramPrefix  = isset($this->mArgs['paramprefix']) ? $this->mArgs['paramprefix'] : '';
 
         // Handle case of image in site wide parameters
         if (!(strlen($pageModule) && strlen($pageName))) {
@@ -114,11 +114,11 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
                 .'/storage/'.$typepath.'/'.$path
             );
 
-            if ($paramPrefix)
+            if ($paramPrefix) {
                 $hiddenInput .= '<input id="'.$paramPrefix.'_'.$fieldName.'" type="hidden" name="wui[][evd]['.$fieldName.']" value="'.$mediaid.'">';
+            }
 
-
-            $this->mLayout .='
+            $this->mLayout .= '
                 var mockFile = { name: "'.$name.'", size: "'.$size.'", mediaid: "'.$mediaid.'"};
                 dropzone'.$id.'.options.addedfile.call(dropzone'.$id.', mockFile);'
                 .($filetype != 'file' ? 'dropzone'.$id.'.options.thumbnail.call(dropzone'.$id.', mockFile, "'.$pathfull.'");' : '');
@@ -127,7 +127,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         }
         // End Add thumbnail
 
-        $this->mLayout .= 'document.querySelector("#'.$id.'").classList.add("dropzone");
+        $this->mLayout .= ' document.querySelector("#'.$id.'").classList.add("dropzone");
             var existingFileCount = '.$count.'; // The number of files already uploaded
             dropzone'.$id.'.options.maxFiles = dropzone'.$id.'.options.maxFiles - existingFileCount;
             </script>'
@@ -140,7 +140,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
     }
 
     /**
-     * Remove image selected
+     * Remove the given image represented by it's media id ($mediaid)
      * @param  string  $containerDropzoneId id of div container of the dropzone
      * @param  string  $page                name of page
      * @param  integer $pageId              id of page
@@ -151,8 +151,9 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
      * @param  integer $fieldName           name of field image in innomedia_blocks
      * @param  integer $mediaId             id of media
      * @param  string  $mediaName           name of media
-     * @param  string  $paramPrefix         prefix field for management page manager
-     * @return object                       return a object
+     * @param  string  $paramPrefix         field used to create the parameter that will passed to the blockmanager's 
+     *                                      parameter management system
+     * @return XajaxResponse                return a ajax object
      */
     public static function ajaxRemoveMedia($containerDropzoneId, $page, $pageId, $block, $blockCounter, $fileId, $maxFiles, $fieldName, $mediaId, $mediaName, $paramPrefix='')
     {
