@@ -3,6 +3,9 @@ namespace Shared\Wui;
 
 class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
 {
+    /*! @public mReadOnly boolean - Set to 'true' if this is a read only string. */
+    //public $mReadOnly;
+    
     public function __construct (
         $elemName,
         $elemArgs = '',
@@ -37,6 +40,7 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $maxFiles     = $this->mArgs['maxfiles'];
         $fieldName    = isset($this->mArgs['fieldname']) ? $this->mArgs['fieldname'] : '';
         $paramPrefix  = isset($this->mArgs['paramprefix']) ? $this->mArgs['paramprefix'] : '';
+        $readonly     = (isset($this->mArgs['readonly']) and strlen($this->mArgs['readonly'])) ? 1 : 0;
 
         // Handle case of image in site wide parameters
         if (!(strlen($pageModule) && strlen($pageName))) {
@@ -51,44 +55,47 @@ class WuiDropzone extends \Innomatic\Wui\Widgets\WuiWidget
         $block = $blockModule.'/'.$blockName;
 
         $containerDropzoneId = "container_$id";
-        $this->mLayout = ($this->mComments ? '<!-- begin ' . $this->mName . ' dropzone -->' : '') .
+        $this->mLayout = ($this->mComments ? '<!-- begin ' . $this->mName . ' dropzone -->' : '');
+
         $this->mLayout .= $dropzoneJs.'<div id="'.$containerDropzoneId.'">
             <div id="'.$id.'"></div>
             <script>
-            var dropzone'.$id.' = new Dropzone("#'.$id.'", { url: "'.$container->getBaseUrl(false).'/dropzone/'.$fileParameters.'"';
+            var dropzone'.$id.' = new Dropzone("#'.$id.'", {'.($readonly ? 'clickable: false,' : '').' url: "'.$container->getBaseUrl(false).'/dropzone/'.$fileParameters.'"';
 
         if (isset($maxFiles)) {
             $this->mLayout .= ', maxFiles: '.$maxFiles;
         }
 
-        $this->mLayout .= ', addRemoveLinks: true, 
-            removedfile: function(file) {
-                var mediaId = file.mediaid;
-                var mediaName = file.name;       
+        if (!$readonly) {
+            $this->mLayout .= ', addRemoveLinks: true, 
+                removedfile: function(file) {
+                    var mediaId = file.mediaid;
+                    var mediaName = file.name;       
 
-                if (mediaId != null) {
-                    xajax_WuiDropzoneRemoveMedia(
-                        \''.$containerDropzoneId.'\', 
-                        \''.$page.'\', 
-                        \''.$pageId.'\', 
-                        \''.$block.'\', 
-                        \''.$blockCounter.'\', 
-                        \''.$fileId.'\', 
-                        \''.$maxFiles.'\', 
-                        \''.$fieldName.'\', 
-                        mediaId, 
-                        mediaName, 
-                        \''.$paramPrefix.'\'
-                    );
+                    if (mediaId != null) {
+                        xajax_WuiDropzoneRemoveMedia(
+                            \''.$containerDropzoneId.'\', 
+                            \''.$page.'\', 
+                            \''.$pageId.'\', 
+                            \''.$block.'\', 
+                            \''.$blockCounter.'\', 
+                            \''.$fileId.'\', 
+                            \''.$maxFiles.'\', 
+                            \''.$fieldName.'\', 
+                            mediaId, 
+                            mediaName, 
+                            \''.$paramPrefix.'\'
+                        );
 
-                } else {
+                    } else {
 
-                    var _ref;
-                    return (_ref = file.previewElement) != null ? _ref.parentNode.removeChild(file.previewElement) : void 0;
-                }
-            }
-        });
-        ';
+                        var _ref;
+                        return (_ref = file.previewElement) != null ? _ref.parentNode.removeChild(file.previewElement) : void 0;
+                    }
+                }';
+        }
+
+        $this->mLayout .= '});';
 
         $list_media = \Innomedia\Media::getMediaByParams($this->mArgs);
 
