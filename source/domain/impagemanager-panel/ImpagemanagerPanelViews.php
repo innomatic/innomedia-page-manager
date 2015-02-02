@@ -6,6 +6,30 @@ use \Innomatic\Wui\Dispatch;
 use \Innomatic\Locale\LocaleCatalog;
 use \Shared\Wui;
 
+/**
+ * Method for get number page.
+ *
+ * @param integer $pageNumber number of the page.
+ * 
+ * @return void
+ */
+function pagesListBuilder($pageNumber)
+{
+
+    $session = \Innomatic\Desktop\Controller\DesktopFrontController::instance(
+        '\Innomatic\Desktop\Controller\DesktopFrontController'
+    )->session;
+
+    if ($session->isValid('parentid')) {
+        $parentId = unserialize($session->get('parentid'));
+    } 
+
+    return \Innomatic\Wui\Dispatch\WuiEventsCall::buildEventsCallString(
+        '', 
+        array(array('view', 'default', array('parentid' => $parentId, 'pagenumber' => $pageNumber))) 
+    );
+}
+
 class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 {
     /**
@@ -44,6 +68,12 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
      * @var string
      */
     protected $status;
+    /**
+     * Number of items for page
+     * 
+     * @var integer
+     */
+    protected $itemsPerPage = 25;
 
     public function update($observable, $arg = '')
     {
@@ -156,6 +186,13 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         } else {
             $parentId = $eventData['parentid'];
         }
+
+
+        \Innomatic\Desktop\Controller\DesktopFrontController::instance(
+            '\Innomatic\Desktop\Controller\DesktopFrontController'
+        )->session->put(
+            'parentid', serialize($parentId)
+        );
 
         // Check if the given parent is a content page, a static page or
         // a module name.
@@ -572,6 +609,38 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         $tableHeaders[1]['label'] = $this->localeCatalog->getStr('page_type_header');
 
         $this->tpl->set('tableHeaders', $tableHeaders);
+
+        // Set number of element in the WUI view template variables.
+        if (is_array($pageChildren)) {
+            $numberItems = count($pageChildren);
+        } else {
+            $numberItems = 0;
+        }
+        $this->tpl->set('numberItems', $numberItems);
+
+        // Set the WUI view template variables.
+        // 
+        $this->tpl->setArray('eventData', $eventData);
+
+        // Set Paginator 
+        // 
+        $page = 1;
+        if (isset($eventData['pagenumber'])) {
+            $page = $eventData['pagenumber'];
+        } else {
+            $table = new \Shared\Wui\WuiTable('items_list', array());
+            $page = $table->mPageNumber;
+        }
+
+        if ($page > ceil($numberItems / $this->itemsPerPage)) {
+            $page = ceil($numberItems / $this->itemsPerPage);
+        } 
+        $from = ($page * $this->itemsPerPage) - $this->itemsPerPage;
+        $to = $from + $this->itemsPerPage - 1;
+
+        $this->tpl->set('itemsPerPage', $this->itemsPerPage);
+        $this->tpl->set('from', $from);
+        $this->tpl->set('to', $to);
     }
 
     /**
@@ -609,31 +678,53 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
             return strcasecmp($a['title'], $b['title']);
         });
 
+        $count_sub_items = 1;
+
         foreach ($list as $data) {
+
+            // go to page two of the element's children, if the number of 
+            // element's children is greater than the number of items per page
+            if ($level >= 2 and count($list) > 0) {
+                if ($count_sub_items <= $this->itemsPerPage) {
+                    $count_sub_items++;
+                } else {
+
+                    $editAction = WuiEventsCall::buildEventsCallString(
+                        '',
+                        [['view', 'default', ['parentid' => $id, 'pagenumber' => 2]]]
+                    );
+                    $menu .= $dots.'|...|'.$editAction.'|...||'."\n";
+                    break;
+                }
+            } 
+
             $editAction = WuiEventsCall::buildEventsCallString(
                 '',
-                [['view', 'default', ['parentid' => $data['id']]]]
+                [['view', 'default', ['parentid' => $data['id'], 'pagenumber' => 1]]]
             );
             $menu .= $dots.'|'.( strlen( $data['title'] ) > 25 ? substr( $data['title'], 0, 23 ).'...' : $data['title'] ).'|'.$editAction.'|'.$data['title'].'||'."\n";
 
             $menu .= $this->buildTreeMenu($catList, $nodesList, $level + 1, $data['id']);
 
             foreach ($nodesList[$data['id']] as $node_data) {
+
                 $editAction = WuiEventsCall::buildEventsCallString(
                     '',
-                    [['view', 'default', ['parentid' => $node_data['id']]]]
+                    [['view', 'default', ['parentid' => $node_data['id'], 'pagenumber' => 1]]]
                 );
 
                 $menu .= $dots.'.|'.( strlen( $node_data['title'] ) > 25 ? substr( $node_data['title'], 0, 23 ).'...' : $node_data['title'] ).'|'.$editAction.'|'.$node_data['title'].'||'
                 ."\n";
             }
+
+
         }
 
         if ($level == 1) {
             foreach ($nodesList[0] as $node_data) {
                 $editAction = WuiEventsCall::buildEventsCallString(
                     '',
-                    [['view', 'default', ['parentid' => $node_data['id']]]]
+                    [['view', 'default', ['parentid' => $node_data['id'], 'pagenumber' => 1]]]
                 );
 
                 $menu .= '.|'.( strlen( $node_data['title'] ) > 25 ? substr( $node_data['title'], 0, 23 ).'...' : $node_data['title'] ).'|'.$editAction.'|'.$node_data['title'].'||'."\n";

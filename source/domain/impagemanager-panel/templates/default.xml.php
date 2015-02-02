@@ -143,14 +143,23 @@
             </label>
 <?php else: ?>
                 <table>
+                  <name>items_list</name>
                   <args>
+                    <id>items_list</id>
                     <headers type="array"><?=$tableHeaders?></headers>
+                    <rows><?=$numberItems?></rows>
+                    <rowsperpage><?=$itemsPerPage?></rowsperpage>
+                    <pagesactionfunction>\pagesListBuilder</pagesactionfunction>
+                    <pagenumber><?= isset($eventData['pagenumber']) ? $eventData['pagenumber'] : '' ?></pagenumber>
                     <width>100%</width>
                   </args>
                   <children>
 
-<?php $tableRow = 0; ?>
-<?php foreach ($pageChildren as $page): ?>
+
+                <?php $tableRow = 0; ?>
+                <?php foreach ($pageChildren as $page): ?>
+
+                 <?php if ($tableRow >= $from and $tableRow <= $to): ?>
 
                     <link row="<?=$tableRow?>" col="0">
                       <args>
@@ -164,19 +173,20 @@
                       </args>
                     </label>
 
-<?php if ($isContentPage == 1 or $isHomePage == 1): ?>
+                    <?php if ($isContentPage == 1 or $isHomePage == 1): ?>
 
-    <innomatictoolbar row="<?=$tableRow?>" col="2">
-      <args>
-        <frame>false</frame>
-        <toolbars type="array"><?=\Shared\Wui\WuiXml::encode($page['toolbars'])?>'</toolbars>
-      </args>
-    </innomatictoolbar>
+                        <innomatictoolbar row="<?=$tableRow?>" col="2">
+                          <args>
+                            <frame>false</frame>
+                            <toolbars type="array"><?=\Shared\Wui\WuiXml::encode($page['toolbars'])?>'</toolbars>
+                          </args>
+                        </innomatictoolbar>
 
-<?php endif; ?>
-<?php $tableRow++; ?>
+                    <?php endif; ?>
+                 <?php endif; ?>
+                 <?php $tableRow++; ?>
 
-<?php endforeach; ?> 
+                <?php endforeach; ?> 
 
                   </children>
                 </table>
