@@ -720,7 +720,7 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         }
 
-        if ($level == 1) {
+        if ($level == 1 and isset($nodesList[0])) {
             foreach ($nodesList[0] as $node_data) {
                 $editAction = WuiEventsCall::buildEventsCallString(
                     '',
