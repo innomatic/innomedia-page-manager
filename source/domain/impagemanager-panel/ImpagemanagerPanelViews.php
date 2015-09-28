@@ -593,9 +593,11 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
 
         // Sort page children.
         //
-        uasort($pageChildren, function($a, $b) {
-            return strcasecmp($a['name'], $b['name']);
-        });
+        if (is_array($pageChildren)) {
+            uasort($pageChildren, function ($a, $b) {
+                return strcasecmp($a['name'], $b['name']);
+            });
+        }
 
         $this->tpl->set('childrenCount',        $childrenCount);
         $this->tpl->set('childrenContentLabel', $this->localeCatalog->getStr('children_content_label'));
@@ -674,50 +676,51 @@ class ImpagemanagerPanelViews extends \Innomatic\Desktop\Panel\PanelViews
         }
 
         $list = $catList[$id];
-        uasort($list, function($a, $b) {
-            return strcasecmp($a['title'], $b['title']);
-        });
+        if (is_array($list)) {
+            uasort($list, function ($a, $b) {
+                return strcasecmp($a['title'], $b['title']);
+            });
+        }
 
         $count_sub_items = 1;
 
-        foreach ($list as $data) {
-
-            // go to page two of the element's children, if the number of 
-            // element's children is greater than the number of items per page
-            if ($level >= 2 and count($list) > 0) {
-                if ($count_sub_items <= $this->itemsPerPage) {
-                    $count_sub_items++;
-                } else {
-
-                    $editAction = WuiEventsCall::buildEventsCallString(
-                        '',
-                        [['view', 'default', ['parentid' => $id, 'pagenumber' => 2]]]
-                    );
-                    $menu .= $dots.'|...|'.$editAction.'|...||'."\n";
-                    break;
+        if (is_array($list)) {
+            foreach ($list as $data) {
+                // go to page two of the element's children, if the number of
+                // element's children is greater than the number of items per page
+                if ($level >= 2 and count($list) > 0) {
+                    if ($count_sub_items <= $this->itemsPerPage) {
+                        $count_sub_items++;
+                    } else {
+                        $editAction = WuiEventsCall::buildEventsCallString(
+                            '',
+                            [['view', 'default', ['parentid' => $id, 'pagenumber' => 2]]]
+                        );
+                        $menu .= $dots . '|...|' . $editAction . '|...||' . "\n";
+                        break;
+                    }
                 }
-            } 
-
-            $editAction = WuiEventsCall::buildEventsCallString(
-                '',
-                [['view', 'default', ['parentid' => $data['id'], 'pagenumber' => 1]]]
-            );
-            $menu .= $dots.'|'.( strlen( $data['title'] ) > 25 ? substr( $data['title'], 0, 23 ).'...' : $data['title'] ).'|'.$editAction.'|'.$data['title'].'||'."\n";
-
-            $menu .= $this->buildTreeMenu($catList, $nodesList, $level + 1, $data['id']);
-
-            foreach ($nodesList[$data['id']] as $node_data) {
 
                 $editAction = WuiEventsCall::buildEventsCallString(
                     '',
-                    [['view', 'default', ['parentid' => $node_data['id'], 'pagenumber' => 1]]]
+                    [['view', 'default', ['parentid' => $data['id'], 'pagenumber' => 1]]]
                 );
+                $menu .= $dots . '|' . (strlen($data['title']) > 25 ? substr($data['title'], 0, 23) . '...' : $data['title']) . '|' . $editAction . '|' . $data['title'] . '||' . "\n";
 
-                $menu .= $dots.'.|'.( strlen( $node_data['title'] ) > 25 ? substr( $node_data['title'], 0, 23 ).'...' : $node_data['title'] ).'|'.$editAction.'|'.$node_data['title'].'||'
-                ."\n";
+                $menu .= $this->buildTreeMenu($catList, $nodesList, $level + 1, $data['id']);
+
+                if (is_array($nodesList[$data['id']])) {
+                    foreach ($nodesList[$data['id']] as $node_data) {
+                        $editAction = WuiEventsCall::buildEventsCallString(
+                            '',
+                            [['view', 'default', ['parentid' => $node_data['id'], 'pagenumber' => 1]]]
+                        );
+
+                        $menu .= $dots . '.|' . (strlen($node_data['title']) > 25 ? substr($node_data['title'], 0, 23) . '...' : $node_data['title']) . '|' . $editAction . '|' . $node_data['title'] . '||'
+                            . "\n";
+                    }
+                }
             }
-
-
         }
 
         if ($level == 1 and isset($nodesList[0])) {
